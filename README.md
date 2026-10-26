@@ -1,54 +1,58 @@
-# ulanzi-d200
+# ulanzi-d200-tools
 
-Einrichtung des Stream-Controllers **Ulanzi D200** unter Kubuntu 26.04 / Plasma 6 (Wayland):
-Tastenkombinationen per `ydotool` und eigene Tastenbelegung je nach Programm im Vordergrund.
+The **Ulanzi D200** is a stream controller: a small desk keypad with 13 display keys and one wide display.
+[racerxdl/ulanzi-d200-linux](https://github.com/racerxdl/ulanzi-d200-linux) makes it usable on Linux. This project
+adds what I needed on top of it with KDE Plasma 6 on Wayland: keys that send keyboard shortcuts (via `ydotool`,
+because `xdotool` does not work on Wayland), and key layouts that switch automatically with the application in the
+foreground – for example debugger keys in PyCharm and tool keys in GIMP.
 
-Basis ist [racerxdl/ulanzi-d200-linux](https://github.com/racerxdl/ulanzi-d200-linux) (Daemon + Web-UI auf
-`http://127.0.0.1:8765`), geklont nach `~/Projekte/ulanzi-d200-linux`. Dieses Projekt enthält nur
-die eigenen Ergänzungen.
+It is my personal setup (Kubuntu 26.04, Plasma 6, Wayland), shared as it is. The scripts are small and should be easy
+to adapt.
 
-## Inhalt
+## Contents
 
-| Datei | Zweck |
+| File | Purpose |
 |---|---|
-| `d200-key` | sendet eine Tastenkombination wie `ctrl+shift+f1` per `ydotool` (Ersatz für die Aktion `key`, die `xdotool` braucht und unter Wayland nicht geht) |
-| `d200-icon` | rendert ein SVG-Icon eines Programms (Datei oder aus einer JAR) und/oder den Funktionsnamen als 196×196-Tastenbild auf Schwarz; braucht `librsvg2-bin` |
-| `d200-focus` | Dienst: wählt beim Fensterwechsel das Layout `~/.config/ulanzi/apps/<programm>.yaml`, prüft es, kopiert es auf `config.yaml` und startet den Daemon neu |
-| `systemd/d200-focus.service` | User-Unit für `d200-focus` (startet mit der Plasma-Sitzung) |
-| `systemd/d200-wide-black.service` | User-Unit, von udev beim Einstecken des D200 gestartet; lässt `d200-focus` den schwarzen Hintergrund neu schicken |
-| `udev/99-d200-focus.rules` | udev-Regel, startet beim Einstecken `d200-wide-black.service` |
-| `systemd/ulanzi-daemon.service.d/override.conf` | hebt die Neustart-Sperre von systemd für den Daemon auf (sonst nach 5 Neustarts in 10 s blockiert); `TimeoutStopSec=2`, weil der Daemon ein SIGTERM während seiner internen Neukonfiguration nach dem Einstecken verliert und systemd sonst 90 s bis zum Kill wartet |
-| `my-layouts/apps/*.yaml` | Tastenbelegung je Programm (`default.yaml`, `konsole.yaml`, ...) |
-| `my-layouts/wide-black.yaml` | Hilfslayout: nur schwarzer Hintergrund für das große Display (siehe „Uhr auf Schwarz“) |
-| `my-layouts/icons/*.png` | Tastenbilder (196×196, `blank-wide.png` 458×196) |
-| `ulanzi-d200-feature-proposals.md` | Vorschläge an den Autor von ulanzi-d200-linux (englisch, Export aus dem Claude-Doc, als GitHub-Issue gedacht) |
-| `ulanzi-d200-issues.md` | Fertige GitHub-Issue-Texte daraus (englisch): kompakte Variante für den Erstkontakt, ausführliche Einzel-Issues für Rückfragen |
+| `d200-key` | sends a key combination such as `ctrl+shift+f1` via `ydotool` (replacement for the `key` action, which needs `xdotool` and does not work on Wayland) |
+| `d200-icon` | renders an application's SVG icon (from a file or from a JAR) and/or the function name as a 196×196 key image on black; needs `librsvg2-bin` |
+| `d200-focus` | service: on every window switch it picks the layout `~/.config/ulanzi/apps/<application>.yaml`, validates it, copies it to `config.yaml` and restarts the daemon |
+| `systemd/d200-focus.service` | user unit for `d200-focus` (starts with the Plasma session) |
+| `systemd/d200-wide-black.service` | user unit started by udev when the D200 is plugged in; makes `d200-focus` send the black background again |
+| `udev/99-d200-focus.rules` | udev rule, starts `d200-wide-black.service` on plug-in |
+| `systemd/ulanzi-daemon.service.d/override.conf` | lifts systemd's restart limit for the daemon (otherwise blocked after 5 restarts in 10 s); `TimeoutStopSec=2`, because the daemon loses a SIGTERM during its internal reconfiguration after plug-in and systemd would wait 90 s before killing it |
+| `my-layouts/apps/*.yaml` | key layout per application (`default.yaml`, `konsole.yaml`, ...) |
+| `my-layouts/wide-black.yaml` | helper layout: only a black background for the wide display (see "Clock on black") |
+| `my-layouts/icons/*.png` | key images (196×196, `blank-wide.png` 458×196) |
+| `ulanzi-d200-feature-proposals.md` | feature proposals for the author of ulanzi-d200-linux |
+| `ulanzi-d200-issues.md` | GitHub issue texts derived from them: a compact version for first contact, detailed single issues for follow-up questions |
 
-Skripte und Units sind nach `~/.local/bin` bzw. `~/.local/share/systemd/user` verlinkt, `my-layouts/apps`, `my-layouts/icons`
-und `my-layouts/wide-black.yaml` nach `~/.config/ulanzi/`. Änderungen an Layouts und Bildern landen dadurch direkt im
-Repo.
+Scripts and units are symlinked into `~/.local/bin` and `~/.local/share/systemd/user`, `my-layouts/apps`,
+`my-layouts/icons` and `my-layouts/wide-black.yaml` into `~/.config/ulanzi/`. Changes to layouts and images therefore
+end up directly in the repository.
 
-`~/.config/ulanzi/layouts/` ist dagegen der Ordner, in dem die Web-GUI ihre gespeicherten Layouts ablegt
-(Dateinamen = sha256). Er gehört nicht zu diesem Projekt und ist bewusst kein Link – deshalb heißt unser Ordner
-`my-layouts`.
+`~/.config/ulanzi/layouts/`, on the other hand, is the folder where the web UI stores its saved layouts (file names =
+sha256). It does not belong to this project and is deliberately not a link – that is why this project's folder is
+called `my-layouts`.
 
-Die Unit-Links liegen bewusst nicht in `~/.config/systemd/user`: Dort gilt ein Symlink auf eine Datei außerhalb der
-Suchpfade als „gelinkte“ Unit, und `systemctl --user disable` löscht ihn mit – danach meldet systemd „Unit does not
-exist“. Den Link in `~/.local/share/systemd/user` lässt `disable` stehen. `enable` legt in `~/.config/systemd/user`
-trotzdem zusätzlich einen Link an, den `disable` wieder entfernt; das ist normal.
+The unit links are deliberately not placed in `~/.config/systemd/user`: there, a symlink to a file outside the search
+paths counts as a "linked" unit, and `systemctl --user disable` deletes it – afterwards systemd reports "Unit does not
+exist". The link in `~/.local/share/systemd/user` survives `disable`. `enable` still creates an additional link in
+`~/.config/systemd/user`, which `disable` removes again; that is normal.
 
-## Wo liegt was
+## Where things live
 
-| Was | Ort | Nach Neuinstallation |
+| What | Location | After a reinstall |
 |---|---|---|
-| ydotool (inkl. `ydotoold` und User-Unit `ydotool.service`) | apt-Paket | neu installieren |
-| udev-Regel (Zugriff auf `hidraw`) | `/etc/udev/rules.d/99-ulanzi.rules` | aus dem Repo kopieren |
-| racerxdl-Klon | `~/Projekte/ulanzi-d200-linux` | bleibt (Datenpartition) |
-| venv, Wrapper | `~/.local/ulanzi/venv`, `~/.local/bin/ulanzi-daemon` | `install.sh` legt beides neu an |
-| Dienste `ulanzi-daemon`, `ulanzi-web` | `~/.config/systemd/user/` | `install.sh` legt sie neu an |
-| Skripte, `d200-focus`-Units, Layouts, Bilder | dieses Projekt | Symlinks neu anlegen |
+| ydotool (incl. `ydotoold` and user unit `ydotool.service`) | apt package | install again |
+| udev rule (access to `hidraw`) | `/etc/udev/rules.d/99-ulanzi.rules` | copy from the ulanzi-d200-linux repo |
+| ulanzi-d200-linux clone | e.g. `~/Projekte/ulanzi-d200-linux` | stays (data partition) |
+| venv, wrapper | `~/.local/ulanzi/venv`, `~/.local/bin/ulanzi-daemon` | `install.sh` creates both again |
+| services `ulanzi-daemon`, `ulanzi-web` | `~/.config/systemd/user/` | `install.sh` creates them again |
+| scripts, `d200-focus` units, layouts, images | this project | create the symlinks again |
 
 ## Installation
+
+Adjust `T` and the path of the ulanzi-d200-linux clone to your setup.
 
 ```bash
 sudo apt install ydotool
@@ -61,7 +65,7 @@ cp $T/my-layouts/apps/default.yaml ~/.config/ulanzi/config.yaml
 cd ~/Projekte/ulanzi-d200-linux
 sudo cp 99-ulanzi.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules && sudo udevadm trigger
 bash install.sh
-# PyGObject (Programme starten) kommt aus dem System, nicht aus pip
+# PyGObject (launching applications) comes from the system, not from pip
 sed -i 's/^include-system-site-packages = false/include-system-site-packages = true/' ~/.local/ulanzi/venv/pyvenv.cfg
 
 mkdir -p ~/.local/bin ~/.config/systemd/user/ulanzi-daemon.service.d
@@ -74,34 +78,34 @@ systemctl --user daemon-reload
 systemctl --user enable --now ydotool.service ulanzi-daemon.service d200-focus.service
 ```
 
-`install.sh` überschreibt keine vorhandene `config.yaml` und lässt das verlinkte `icons` unverändert. Danach den D200
-einmal ab- und wieder anstecken.
+`install.sh` does not overwrite an existing `config.yaml` and leaves the linked `icons` untouched. Afterwards unplug
+the D200 and plug it in again.
 
-## Layouts je Programm
+## Layouts per application
 
-- Ein Layout pro Programm: `~/.config/ulanzi/apps/<programm>.yaml`, für alle anderen `default.yaml`.
-- Der Programmname ist die Fensterklasse ohne Präfix: `org.kde.konsole` → `konsole.yaml`. Die Namen zeigt
-  `journalctl --user -u d200-focus -f` (z. B. `focus: gimp -> default`).
-- **Nur die Dateien in `apps/` bearbeiten.** `config.yaml` wird bei jedem Wechsel überschrieben.
-- Eine geänderte Datei wird beim nächsten Wechsel zu diesem Layout übernommen, sofort mit
+- One layout per application: `~/.config/ulanzi/apps/<application>.yaml`, `default.yaml` for all others.
+- The application name is the window class without prefix: `org.kde.konsole` → `konsole.yaml`. The names are shown by
+  `journalctl --user -u d200-focus -f` (e.g. `focus: gimp -> default`).
+- **Only edit the files in `apps/`.** `config.yaml` is overwritten on every switch.
+- A changed file is picked up the next time its layout is selected, immediately with
   `systemctl --user restart d200-focus`.
-- Fehlerhafte Layouts werden abgelehnt, das bisherige bleibt aktiv. Die Fehlermeldung steht im Journal von `d200-focus`.
-- Kommentare (`#`) und Leerzeilen sind erlaubt und bleiben erhalten.
-- Startmenü, KRunner und Plasma-Dialoge zählen auch als Fenster und schalten auf `default`.
+- Broken layouts are rejected and the current one stays active. The error message is in the journal of `d200-focus`.
+- Comments (`#`) and blank lines are allowed and are kept.
+- The application launcher, KRunner and Plasma dialogs count as windows too and switch to `default`.
 
-Ein Wechsel dauert etwa 0,4 s (300 ms Wartezeit gegen Alt+Tab-Zwischenschritte, Prüfung, Daemon-Neustart).
+A switch takes about 0.4 s (300 ms delay against intermediate Alt+Tab steps, validation, daemon restart).
 
-### Tasten
+### Keys
 
-Nummern zeilenweise ab 0 oben links (0–4, 5–9, 10–12, 13 = großes Display). Die Position in der Liste `buttons:`
-bestimmt die Taste.
+Numbered row by row from 0 at the top left (0–4, 5–9, 10–12, 13 = wide display). The position in the `buttons:` list
+determines the key.
 
-Eine leere Taste braucht das schwarze Bild `blank.png`. Bei `null` überträgt der Daemon die Taste gar nicht, und das
-Gerät zeigt weiter das Bild aus dem vorherigen Layout. `enabled: false` allein lehnt der Validator ab (Bild fehlt).
-Bei deaktivierten Tasten zeigt der Daemon `background_tile` an. Das ist das Format, das auch die Web-GUI
-schreibt und akzeptiert. Die Variante `image` + `action_enabled: false` nimmt der Daemon zwar an, die GUI lehnt
-dann aber das Speichern ab („Botão N: preencha cmd“).
-Taste 13 (großes Display) bleibt `null`, dann zeigt die Firmware ihre Uhr (siehe „Uhr auf Schwarz“).
+An empty key needs the black image `blank.png`. With `null` the daemon does not send the key at all, and the device
+keeps showing the image from the previous layout. `enabled: false` alone is rejected by the validator (image missing).
+For disabled keys the daemon shows `background_tile`. This is the format the web UI writes and accepts as well. The
+variant `image` + `action_enabled: false` is accepted by the daemon, but the web UI then refuses to save ("Botão N:
+preencha cmd").
+Key 13 (wide display) stays `null`, then the firmware shows its clock (see "Clock on black").
 
 ```yaml
 # 7: empty
@@ -109,8 +113,8 @@ Taste 13 (großes Display) bleibt `null`, dann zeigt die Firmware ihre Uhr (sieh
   background_tile: ./icons/blank.png
 ```
 
-Die Web-GUI schreibt nur in `config.yaml`, die d200-focus beim nächsten Fensterwechsel wieder überschreibt. Sie
-taugt deshalb nur zum Ausprobieren. Was bleiben soll, gehört in `apps/<app>.yaml`.
+The web UI only writes `config.yaml`, which d200-focus overwrites again on the next window switch. It is therefore only
+useful for trying things out. Anything that should stay belongs in `apps/<application>.yaml`.
 
 ```yaml
 buttons:
@@ -123,53 +127,53 @@ buttons:
     cmd: ~/.local/bin/d200-key previoussong
 ```
 
-`d200-key` kennt alle Namen aus `/usr/include/linux/input-event-codes.h` ohne `KEY_` (z. B. `f1`, `enter`,
-`playpause`, `nextsong`) und die Kurzformen `ctrl`, `shift`, `alt`, `altgr`, `super`.
-Die Namen sind Scancodes der US-Tastatur, das deutsche Layout bildet sie um: `y` ergibt **Z** und umgekehrt (Undo in
-GIMP ist deshalb `ctrl+y`). Bei Sonderzeichen gilt das ebenso.
+`d200-key` knows all names from `/usr/include/linux/input-event-codes.h` without `KEY_` (e.g. `f1`, `enter`,
+`playpause`, `nextsong`) plus the short forms `ctrl`, `shift`, `alt`, `altgr`, `super`.
+The names are scancodes of the US keyboard, other keyboard layouts remap them: on a German layout `y` gives **Z** and
+vice versa (undo in GIMP is therefore `ctrl+y` in my layouts). The same applies to special characters.
 
-Weitere Aktionen: `app` (Programm starten, `params: {name: firefox}`), `command` (beliebiger Befehl), `obs`.
+Other actions: `app` (launch an application, `params: {name: firefox}`), `command` (any command), `obs`.
 
-### Icons aus Programmen
+### Icons from applications
 
-Viele Programme haben ihre Symbolleisten-Icons als SVG dabei. `d200-icon` zeichnet so ein Icon auf Schwarz und schreibt
-optional den Funktionsnamen darunter (`|` = neue Zeile); mit `-` statt SVG wird es eine reine Text-Taste. Der Text steckt
-im Bild, weil die Firmware Labels nur mit einer Schriftgröße je Layout zeichnet – im Layout dann `ShowTitle: false`.
-Bei JetBrains-IDEs liegen sie in `lib/app-client.jar` unter `expui/` (Variante `_dark` für den schwarzen Hintergrund),
-die der alten Oberfläche ohne `expui/` – nützlich, wenn die neue für eine Funktion kein Icon mehr hat. Bei
-KDE-Programmen liegen sie in `/usr/share/icons/breeze-dark/actions/`.
+Many applications ship their toolbar icons as SVG. `d200-icon` draws such an icon on black and optionally writes the
+function name below it (`|` = new line); with `-` instead of an SVG it becomes a text-only key. The text is part of the
+image because the firmware draws labels in only one font size per layout – set `ShowTitle: false` in the layout.
+JetBrains IDEs keep them in `lib/app-client.jar` under `expui/` (variant `_dark` for the black background), the icons
+of the old UI without `expui/` – useful when the new UI has no icon for a function any more. KDE applications keep them
+in `/usr/share/icons/breeze-dark/actions/`.
 
 ```bash
 J=~/apps/pycharm/lib/app-client.jar
 unzip -l $J | grep -i 'expui/run/.*_dark.svg'      # find names
-ulanzi-d200/d200-icon "$J!expui/run/resume_dark.svg" ulanzi-d200/my-layouts/icons/pycharm-resume.png Resume
-ulanzi-d200/d200-icon - ulanzi-d200/my-layouts/icons/pycharm-usages.png "Find|Usages"
+./d200-icon "$J!expui/run/resume_dark.svg" my-layouts/icons/pycharm-resume.png Resume
+./d200-icon - my-layouts/icons/pycharm-usages.png "Find|Usages"
 ```
 
-### Uhr auf Schwarz
+### Clock on black
 
-Die Firmware-Uhr liegt auf dem Bild, das zuletzt als Hintergrund des großen Displays ins Gerät kam. Nach Standby und
-Einstecken ist das wieder das Ulanzi-Logo. `d200-focus` schickt deshalb beim Start, nach dem Aufwachen (logind
-`PrepareForSleep`) und beim Einstecken (udev → `d200-wide-black.service` → D-Bus-Methode `prime`) zuerst
-`~/.config/ulanzi/wide-black.yaml` und danach wieder das eigentliche Layout. Die Tasten wechseln sofort, die Uhr erscheint
-nach etwa 3–4 s. Ohne Änderung am racerxdl-Code; von Hand: `systemctl --user start d200-wide-black`.
+The firmware clock is drawn on the image that was last sent as the wide display's background. After standby and
+plug-in that is the Ulanzi logo again. `d200-focus` therefore sends `~/.config/ulanzi/wide-black.yaml` first at start,
+after resume (logind `PrepareForSleep`) and on plug-in (udev → `d200-wide-black.service` → D-Bus method `prime`), and
+then the actual layout again. The keys switch immediately, the clock appears after about 3–4 s. No change to the
+ulanzi-d200-linux code is needed; manually: `systemctl --user start d200-wide-black`.
 
-## Fallstricke
+## Pitfalls
 
-- **Web-UI** ist fest auf Portugiesisch (Firefox-Übersetzung reicht). Sie kennt `icon_spec` nicht und verwirft beim
-  Speichern `icon_spec` und alle Kommentare. Mit `d200-focus` ist sie ohnehin nur zum Ansehen sinnvoll.
-- **`icon_spec`** (vom Daemon erzeugte Textbilder, `icons/button_icon_<n>.png`): erzeugte Bilder umbenennen und per
-  `image:` eintragen.
-- **`ulanzi-manager validate`** direkt in `apps/` meldet fehlende Bilder, weil `./icons/` relativ zur Datei aufgelöst
-  wird. Zum Prüfen nach `~/.config/ulanzi/` kopieren.
-- **Großes Display (13):** Ohne Eintrag zeigt die Firmware ihre Uhr auf dem zuletzt gespeicherten Hintergrund, nach
-  Standby oder Einstecken auf dem Ulanzi-Logo (Abhilfe siehe „Uhr auf Schwarz“). Mit Eintrag erlaubt das Tool nur
-  Bild, GIF oder Systemanzeige, die Firmware-Uhr geht dann nicht. Ein Versuch, die Uhr auf eigenem Hintergrund zu zeigen
-  (`SmallViewMode` 1 mit Bild), hat die Firmware in den Werkszustand gestürzt; ein Daemon-Neustart stellt alles wieder her.
-- **Ohne Daemon** schickt die große Taste ein eingebautes Tastaturmakro (Link `www.ulanzistudio.com` bzw. Screenshot),
-  weil sich der D200 zusätzlich als USB-Tastatur meldet.
-- **Daemon lädt `config.yaml` nicht selbst neu**, nur beim Start (`systemctl --user restart ulanzi-daemon`).
+- **The web UI** is in Portuguese only (Firefox's page translation is enough). It does not know `icon_spec` and drops
+  `icon_spec` and all comments when saving. With `d200-focus` it is only useful for viewing anyway.
+- **`icon_spec`** (text images generated by the daemon, `icons/button_icon_<n>.png`): rename the generated images and
+  reference them via `image:`.
+- **`ulanzi-manager validate`** run directly in `apps/` reports missing images, because `./icons/` is resolved relative
+  to the file. Copy the file to `~/.config/ulanzi/` to validate it.
+- **Wide display (13):** without an entry the firmware shows its clock on the last stored background, after standby or
+  plug-in on the Ulanzi logo (fix see "Clock on black"). With an entry the tool only allows an image, a GIF or the
+  system stats, and the firmware clock is gone. An attempt to show the clock on a custom background (`SmallViewMode` 1
+  with an image) crashed the firmware back to factory state; a daemon restart restores everything.
+- **Without the daemon** the wide key sends a built-in keyboard macro (link `www.ulanzistudio.com` or a screenshot),
+  because the D200 also registers as a USB keyboard.
+- **The daemon does not reload `config.yaml` by itself**, only at start (`systemctl --user restart ulanzi-daemon`).
 
-## Lizenz
+## License
 
-MIT, siehe [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).
