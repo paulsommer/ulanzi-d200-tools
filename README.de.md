@@ -24,8 +24,8 @@ klein und sollten sich leicht anpassen lassen.
 | `d200-focus` | Dienst: wählt beim Fensterwechsel das Layout `~/.config/ulanzi/apps/<programm>.yaml`, prüft es, kopiert es auf `config.yaml` und startet den Daemon neu |
 | `systemd/d200-focus.service` | User-Unit für `d200-focus` (startet mit der Plasma-Sitzung) |
 | `systemd/d200-wide-black.service` | User-Unit, von udev beim Einstecken des D200 gestartet; lässt `d200-focus` den schwarzen Hintergrund neu schicken |
-| `udev/99-d200-focus.rules` | udev-Regel, startet beim Einstecken `d200-wide-black.service` |
-| `systemd/ulanzi-daemon.service.d/override.conf` | hebt die Neustart-Sperre von systemd für den Daemon auf (sonst nach 5 Neustarts in 10 s blockiert); `TimeoutStopSec=2`, weil der Daemon ein SIGTERM während seiner internen Neukonfiguration nach dem Einstecken verliert und systemd sonst 90 s bis zum Kill wartet |
+| `udev/99-d200-focus.rules` | udev-Regel, startet beim Einstecken `d200-wide-black.service` und legt den Symlink `/dev/ulanzi-d200` an, solange der D200 angeschlossen ist |
+| `systemd/ulanzi-daemon.service.d/override.conf` | hebt die Neustart-Sperre von systemd für den Daemon auf (sonst nach 5 Neustarts in 10 s blockiert); `TimeoutStopSec=2`, weil der Daemon ein SIGTERM während seiner internen Neukonfiguration nach dem Einstecken verliert und systemd sonst 90 s bis zum Kill wartet; `ExecCondition` prüft `/dev/ulanzi-d200`, damit der Daemon bei ausgeschaltetem D200 gar nicht erst startet (statt alle 5 s zu scheitern) |
 | `my-layouts/apps/*.yaml` | Tastenbelegung je Programm (`default.yaml`, `konsole.yaml`, ...) |
 | `my-layouts/wide-black.yaml` | Hilfslayout: nur schwarzer Hintergrund für das große Display (siehe „Uhr auf Schwarz“) |
 | `my-layouts/icons/*.png` | Tastenbilder (196×196, `blank-wide.png` 458×196) |
@@ -178,6 +178,8 @@ nach etwa 3–4 s. Ohne Änderung am ulanzi-d200-linux-Code; von Hand: `systemct
   (`SmallViewMode` 1 mit Bild), hat die Firmware in den Werkszustand gestürzt; ein Daemon-Neustart stellt alles wieder her.
 - **Ohne Daemon** schickt die große Taste ein eingebautes Tastaturmakro (Link `www.ulanzistudio.com` bzw. Screenshot),
   weil sich der D200 zusätzlich als USB-Tastatur meldet.
+- **Ohne D200** scheitert der Upstream-Daemon und wird von systemd alle 5 s neu gestartet. `ExecCondition` in
+  `override.conf` überspringt den Start stattdessen still; nach dem Einschalten starten ihn udev-Regel und `d200-focus` wieder.
 - **Daemon lädt `config.yaml` nicht selbst neu**, nur beim Start (`systemctl --user restart ulanzi-daemon`).
 
 ## Lizenz

@@ -21,8 +21,8 @@ It is my personal setup (Kubuntu 26.04, Plasma 6, Wayland), shared as it is. The
 | `d200-focus` | service: on every window switch it picks the layout `~/.config/ulanzi/apps/<application>.yaml`, validates it, copies it to `config.yaml` and restarts the daemon |
 | `systemd/d200-focus.service` | user unit for `d200-focus` (starts with the Plasma session) |
 | `systemd/d200-wide-black.service` | user unit started by udev when the D200 is plugged in; makes `d200-focus` send the black background again |
-| `udev/99-d200-focus.rules` | udev rule, starts `d200-wide-black.service` on plug-in |
-| `systemd/ulanzi-daemon.service.d/override.conf` | lifts systemd's restart limit for the daemon (otherwise blocked after 5 restarts in 10 s); `TimeoutStopSec=2`, because the daemon loses a SIGTERM during its internal reconfiguration after plug-in and systemd would wait 90 s before killing it |
+| `udev/99-d200-focus.rules` | udev rule, starts `d200-wide-black.service` on plug-in and creates the symlink `/dev/ulanzi-d200` while the D200 is connected |
+| `systemd/ulanzi-daemon.service.d/override.conf` | lifts systemd's restart limit for the daemon (otherwise blocked after 5 restarts in 10 s); `TimeoutStopSec=2`, because the daemon loses a SIGTERM during its internal reconfiguration after plug-in and systemd would wait 90 s before killing it; `ExecCondition` checks `/dev/ulanzi-d200`, so the daemon is not started (and does not fail every 5 s) while the D200 is switched off |
 | `my-layouts/apps/*.yaml` | key layout per application (`default.yaml`, `konsole.yaml`, ...) |
 | `my-layouts/wide-black.yaml` | helper layout: only a black background for the wide display (see "Clock on black") |
 | `my-layouts/icons/*.png` | key images (196×196, `blank-wide.png` 458×196) |
@@ -175,6 +175,8 @@ ulanzi-d200-linux code is needed; manually: `systemctl --user start d200-wide-bl
   with an image) crashed the firmware back to factory state; a daemon restart restores everything.
 - **Without the daemon** the wide key sends a built-in keyboard macro (link `www.ulanzistudio.com` or a screenshot),
   because the D200 also registers as a USB keyboard.
+- **Without the D200** the upstream daemon fails and is restarted by systemd every 5 s. `ExecCondition` in `override.conf`
+  skips the start quietly instead; after switching the D200 on, the udev rule and `d200-focus` start it again.
 - **The daemon does not reload `config.yaml` by itself**, only at start (`systemctl --user restart ulanzi-daemon`).
 
 ## License
