@@ -27,15 +27,15 @@ import dbus.mainloop.glib
 import dbus.service
 from gi.repository import GLib, GLibUnix
 
-VERSION = "1.1.2"
+VERSION = "1.1.3"
 BUS_NAME = "io.github.paulsommer.D200Focus"
 PLUGIN_NAME = "d200-focus"
-ULANZI_DIR = Path.home() / ".config/ulanzi"
+ULANZI_DIR = Path.home() / ".config/ulanzi" ### <--- change this to your path (where ~/.config/ulanzi/ is set up)
 APPS_DIR = ULANZI_DIR / "apps"
 CONFIG_FILE = ULANZI_DIR / "config.yaml"
 # Must live next to config.yaml so that relative image paths (./icons/...) resolve
 CHECK_FILE = ULANZI_DIR / ".d200-focus-check.yaml"
-VALIDATOR = Path.home() / ".local/ulanzi/venv/bin/ulanzi-manager"
+VALIDATOR = Path.home() / ".local/ulanzi/venv/bin/ulanzi-manager" ### <--- change this to your path (venv of ulanzi-d200-linux install.sh)
 DEFAULT_LAYOUT = "default"
 WIDE_BLACK_FILE = ULANZI_DIR / "wide-black.yaml"
 # Wait for focus to settle (e.g. Alt+Tab) before restarting the daemon

@@ -25,7 +25,7 @@ buttons:
   label: Ctrl+Z
   action: command
   params:
-    cmd: ~/.local/bin/d200-key ctrl+y
+    cmd: ~/.local/bin/d200-key ctrl+y  ### <--- change this to your path (where d200-key is linked)
 
 # 1: Redo (US "z" = German Y key)
 - image: ./icons/gimp-redo.png
@@ -35,7 +35,7 @@ buttons:
   label: Ctrl+Y
   action: command
   params:
-    cmd: ~/.local/bin/d200-key ctrl+z
+    cmd: ~/.local/bin/d200-key ctrl+z  ### <--- change this to your path (where d200-key is linked)
 
 # 2: Fit image in window
 - image: ./icons/gimp-zoom-fit.png
@@ -45,7 +45,7 @@ buttons:
   label: Shift+Ctrl+J
   action: command
   params:
-    cmd: ~/.local/bin/d200-key shift+ctrl+j
+    cmd: ~/.local/bin/d200-key shift+ctrl+j  ### <--- change this to your path (where d200-key is linked)
 
 # 3: previous track
 - image: ./icons/media-previous.png
@@ -55,7 +55,7 @@ buttons:
   label: ''
   action: command
   params:
-    cmd: ~/.local/bin/d200-key previoussong
+    cmd: ~/.local/bin/d200-key previoussong  ### <--- change this to your path (where d200-key is linked)
 
 # 4: next track
 - image: ./icons/media-next.png
@@ -65,7 +65,7 @@ buttons:
   label: ''
   action: command
   params:
-    cmd: ~/.local/bin/d200-key nextsong
+    cmd: ~/.local/bin/d200-key nextsong  ### <--- change this to your path (where d200-key is linked)
 
 # 5: Rectangle select
 - image: ./icons/gimp-rect-select.png
@@ -75,7 +75,7 @@ buttons:
   label: R
   action: command
   params:
-    cmd: ~/.local/bin/d200-key r
+    cmd: ~/.local/bin/d200-key r  ### <--- change this to your path (where d200-key is linked)
 
 # 6: Select none
 - image: ./icons/gimp-select-none.png
@@ -85,7 +85,7 @@ buttons:
   label: Shift+Ctrl+A
   action: command
   params:
-    cmd: ~/.local/bin/d200-key shift+ctrl+a
+    cmd: ~/.local/bin/d200-key shift+ctrl+a  ### <--- change this to your path (where d200-key is linked)
 
 # 7: Move
 - image: ./icons/gimp-move.png
@@ -95,7 +95,7 @@ buttons:
   label: M
   action: command
   params:
-    cmd: ~/.local/bin/d200-key m
+    cmd: ~/.local/bin/d200-key m  ### <--- change this to your path (where d200-key is linked)
 
 # 8: Crop
 - image: ./icons/gimp-crop.png
@@ -105,7 +105,7 @@ buttons:
   label: Shift+C
   action: command
   params:
-    cmd: ~/.local/bin/d200-key shift+c
+    cmd: ~/.local/bin/d200-key shift+c  ### <--- change this to your path (where d200-key is linked)
 
 # 9: play/pause
 - image: ./icons/media-playpause.png
@@ -115,7 +115,7 @@ buttons:
   label: ''
   action: command
   params:
-    cmd: ~/.local/bin/d200-key playpause
+    cmd: ~/.local/bin/d200-key playpause  ### <--- change this to your path (where d200-key is linked)
 
 # 10: Paintbrush
 - image: ./icons/gimp-paintbrush.png
@@ -125,7 +125,7 @@ buttons:
   label: P
   action: command
   params:
-    cmd: ~/.local/bin/d200-key p
+    cmd: ~/.local/bin/d200-key p  ### <--- change this to your path (where d200-key is linked)
 
 # 11: Eraser
 - image: ./icons/gimp-eraser.png
@@ -135,7 +135,7 @@ buttons:
   label: Shift+E
   action: command
   params:
-    cmd: ~/.local/bin/d200-key shift+e
+    cmd: ~/.local/bin/d200-key shift+e  ### <--- change this to your path (where d200-key is linked)
 
 # 12: Text
 - image: ./icons/gimp-text.png
@@ -145,7 +145,7 @@ buttons:
   label: T
   action: command
   params:
-    cmd: ~/.local/bin/d200-key t
+    cmd: ~/.local/bin/d200-key t  ### <--- change this to your path (where d200-key is linked)
 
 # 13:
 - null

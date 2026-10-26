@@ -24,7 +24,7 @@ buttons:
   label: Shift+Alt+7
   action: command
   params:
-    cmd: ~/.local/bin/d200-key shift+alt+7
+    cmd: ~/.local/bin/d200-key shift+alt+7  ### <--- change this to your path (where d200-key is linked)
 
 # 1: Go to implementation(s)
 - image: ./icons/pycharm-impl.png
@@ -34,7 +34,7 @@ buttons:
   label: Ctrl+Alt+B
   action: command
   params:
-    cmd: ~/.local/bin/d200-key ctrl+alt+b
+    cmd: ~/.local/bin/d200-key ctrl+alt+b  ### <--- change this to your path (where d200-key is linked)
 
 # 2: Search everywhere (double Shift)
 - image: ./icons/pycharm-search.png
@@ -44,7 +44,7 @@ buttons:
   label: Shift Shift
   action: command
   params:
-    cmd: ~/.local/bin/d200-key shift && ~/.local/bin/d200-key shift
+    cmd: ~/.local/bin/d200-key shift && ~/.local/bin/d200-key shift  ### <--- change this to your path (where d200-key is linked)
 
 # 3: previous track
 - image: ./icons/media-previous.png
@@ -54,7 +54,7 @@ buttons:
   label: ''
   action: command
   params:
-    cmd: ~/.local/bin/d200-key previoussong
+    cmd: ~/.local/bin/d200-key previoussong  ### <--- change this to your path (where d200-key is linked)
 
 # 4: next track
 - image: ./icons/media-next.png
@@ -64,7 +64,7 @@ buttons:
   label: ''
   action: command
   params:
-    cmd: ~/.local/bin/d200-key nextsong
+    cmd: ~/.local/bin/d200-key nextsong  ### <--- change this to your path (where d200-key is linked)
 
 # 5: Debug
 - image: ./icons/pycharm-debug.png
@@ -74,7 +74,7 @@ buttons:
   label: Shift+F9
   action: command
   params:
-    cmd: ~/.local/bin/d200-key shift+f9
+    cmd: ~/.local/bin/d200-key shift+f9  ### <--- change this to your path (where d200-key is linked)
 
 # 6: Step over
 - image: ./icons/pycharm-step-over.png
@@ -84,7 +84,7 @@ buttons:
   label: F8
   action: command
   params:
-    cmd: ~/.local/bin/d200-key f8
+    cmd: ~/.local/bin/d200-key f8  ### <--- change this to your path (where d200-key is linked)
 
 # 7: Step into my code
 - image: ./icons/pycharm-step-into.png
@@ -94,7 +94,7 @@ buttons:
   label: Alt+Shift+F7
   action: command
   params:
-    cmd: ~/.local/bin/d200-key alt+shift+f7
+    cmd: ~/.local/bin/d200-key alt+shift+f7  ### <--- change this to your path (where d200-key is linked)
 
 # 8: Step out
 - image: ./icons/pycharm-step-out.png
@@ -104,7 +104,7 @@ buttons:
   label: Shift+F8
   action: command
   params:
-    cmd: ~/.local/bin/d200-key shift+f8
+    cmd: ~/.local/bin/d200-key shift+f8  ### <--- change this to your path (where d200-key is linked)
 
 # 9: play/pause
 - image: ./icons/media-playpause.png
@@ -114,7 +114,7 @@ buttons:
   label: ''
   action: command
   params:
-    cmd: ~/.local/bin/d200-key playpause
+    cmd: ~/.local/bin/d200-key playpause  ### <--- change this to your path (where d200-key is linked)
 
 # 10: Back
 - image: ./icons/pycharm-back.png
@@ -124,7 +124,7 @@ buttons:
   label: Ctrl+Alt+Left
   action: command
   params:
-    cmd: ~/.local/bin/d200-key ctrl+alt+left
+    cmd: ~/.local/bin/d200-key ctrl+alt+left  ### <--- change this to your path (where d200-key is linked)
 
 # 11: Forward
 - image: ./icons/pycharm-forward.png
@@ -134,7 +134,7 @@ buttons:
   label: Ctrl+Alt+Right
   action: command
   params:
-    cmd: ~/.local/bin/d200-key ctrl+alt+right
+    cmd: ~/.local/bin/d200-key ctrl+alt+right  ### <--- change this to your path (where d200-key is linked)
 
 # 12: Resume program
 - image: ./icons/pycharm-resume.png
@@ -144,7 +144,7 @@ buttons:
   label: F9
   action: command
   params:
-    cmd: ~/.local/bin/d200-key f9
+    cmd: ~/.local/bin/d200-key f9  ### <--- change this to your path (where d200-key is linked)
 
 # 13:
 - null

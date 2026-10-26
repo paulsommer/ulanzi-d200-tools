@@ -44,7 +44,7 @@ buttons:
   label: ''
   action: command
   params:
-    cmd: ~/.local/bin/d200-key previoussong
+    cmd: ~/.local/bin/d200-key previoussong  ### <--- change this to your path (where d200-key is linked)
 
 # 4: next track
 - image: ./icons/media-next.png
@@ -54,7 +54,7 @@ buttons:
   label: ''
   action: command
   params:
-    cmd: ~/.local/bin/d200-key nextsong
+    cmd: ~/.local/bin/d200-key nextsong  ### <--- change this to your path (where d200-key is linked)
 
 # 5: Copy (Ctrl+Shift+C)
 - image: ./icons/copy.png
@@ -64,7 +64,7 @@ buttons:
   label: Ctrl+Shift+C
   action: command
   params:
-    cmd: ~/.local/bin/d200-key ctrl+shift+c
+    cmd: ~/.local/bin/d200-key ctrl+shift+c  ### <--- change this to your path (where d200-key is linked)
 
 # 6: Paste (Ctrl+Shift+V)
 - image: ./icons/paste.png
@@ -74,7 +74,7 @@ buttons:
   label: Ctrl+Shift+V
   action: command
   params:
-    cmd: ~/.local/bin/d200-key ctrl+shift+v
+    cmd: ~/.local/bin/d200-key ctrl+shift+v  ### <--- change this to your path (where d200-key is linked)
 
 # 7:
 - enabled: false
@@ -92,7 +92,7 @@ buttons:
   label: ''
   action: command
   params:
-    cmd: ~/.local/bin/d200-key playpause
+    cmd: ~/.local/bin/d200-key playpause  ### <--- change this to your path (where d200-key is linked)
 
 # 10:
 - enabled: false

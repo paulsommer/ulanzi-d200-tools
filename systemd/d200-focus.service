@@ -5,6 +5,7 @@ PartOf=graphical-session.target
 
 [Service]
 Type=simple
+# ### <--- change this to your path (where d200-focus is linked)
 ExecStart=%h/.local/bin/d200-focus
 Restart=on-failure
 RestartSec=5

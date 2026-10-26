@@ -2,6 +2,8 @@
 
 *English: [README.md](README.md)*
 
+**HINWEIS:** Diese Software wurde in Zusammenarbeit mit „claude code“ entwickelt. Falls Sie gegen den Einsatz von KI in der Softwareentwicklung sind, zögern Sie nicht – gehen Sie einfach weiter :-)
+
 Der **Ulanzi D200** ist ein Stream-Controller: ein kleines Tastenfeld für den Schreibtisch mit 13 Display-Tasten und
 einem breiten Display. [racerxdl/ulanzi-d200-linux](https://github.com/racerxdl/ulanzi-d200-linux) macht ihn unter
 Linux nutzbar. Dieses Projekt ergänzt, was ich darüber hinaus unter KDE Plasma 6 mit Wayland gebraucht habe: Tasten,
@@ -10,7 +12,8 @@ die automatisch mit dem Programm im Vordergrund wechseln – zum Beispiel Debugg
 in GIMP.
 
 Es ist mein persönliches Setup (Kubuntu 26.04, Plasma 6, Wayland) und wird so geteilt, wie es ist. Die Skripte sind
-klein und sollten sich leicht anpassen lassen.
+klein und sollten sich leicht anpassen lassen.  
+**Vor dem Ausführen der Skripte vor allem die Pfade prüfen.**
 
 ## Inhalt
 
@@ -59,13 +62,13 @@ trotzdem zusätzlich einen Link an, den `disable` wieder entfernt; das ist norma
 
 ```bash
 sudo apt install ydotool
-T=~/Projekte/ulanzi-d200-tools
+T=~/Projekte/ulanzi-d200-tools   ### <--- change this to your path (this repository)
 # layouts, icons and helper layout first, so install.sh does not create its own icons dir
 mkdir -p ~/.config/ulanzi
 ln -s $T/my-layouts/apps $T/my-layouts/icons $T/my-layouts/wide-black.yaml ~/.config/ulanzi/
 cp $T/my-layouts/apps/default.yaml ~/.config/ulanzi/config.yaml
 
-cd ~/Projekte/ulanzi-d200-linux
+cd ~/Projekte/ulanzi-d200-linux   ### <--- change this to your path (your ulanzi-d200-linux clone)
 sudo cp 99-ulanzi.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules && sudo udevadm trigger
 bash install.sh
 # PyGObject (launching applications) comes from the system, not from pip
@@ -147,7 +150,7 @@ die der alten Oberfläche ohne `expui/` – nützlich, wenn die neue für eine F
 KDE-Programmen liegen sie in `/usr/share/icons/breeze-dark/actions/`.
 
 ```bash
-J=~/apps/pycharm/lib/app-client.jar
+J=~/apps/pycharm/lib/app-client.jar   ### <--- change this to your path (your PyCharm installation)
 unzip -l $J | grep -i 'expui/run/.*_dark.svg'      # find names
 ./d200-icon "$J!expui/run/resume_dark.svg" my-layouts/icons/pycharm-resume.png Resume
 ./d200-icon - my-layouts/icons/pycharm-usages.png "Find|Usages"

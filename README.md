@@ -2,14 +2,15 @@
 
 *Deutsch: [README.de.md](README.de.md)*
 
-The **Ulanzi D200** is a stream controller: a small desk keypad with 13 display keys and one wide display.
-[racerxdl/ulanzi-d200-linux](https://github.com/racerxdl/ulanzi-d200-linux) makes it usable on Linux. This project
-adds what I needed on top of it with KDE Plasma 6 on Wayland: keys that send keyboard shortcuts (via `ydotool`,
-because `xdotool` does not work on Wayland), and key layouts that switch automatically with the application in the
-foreground – for example debugger keys in PyCharm and tool keys in GIMP.
+**NOTE:** This software was developed in collaboration with “claude code.” If you happen to be opposed to the use of AI in software development, don’t hesitate—just move on :-)
 
-It is my personal setup (Kubuntu 26.04, Plasma 6, Wayland), shared as it is. The scripts are small and should be easy
-to adapt.
+
+The **Ulanzi D200** is a stream controller: a small desk keypad with 13 display keys and one wide display.
+[racerxdl/ulanzi-d200-linux](https://github.com/racerxdl/ulanzi-d200-linux) makes it usable on Linux.  
+This project adds what I needed on top of it with KDE Plasma 6 on Wayland: keys that send keyboard shortcuts (via `ydotool`, because `xdotool` does not work on Wayland), and key layouts that switch automatically with the application in the foreground – for example debugger keys in PyCharm and tool keys in GIMP.
+
+It is my personal setup (Kubuntu 26.04, Plasma 6, Wayland), shared as it is. The scripts are small and should be easy to adapt.  
+**Especially check the paths before running the scripts.**
 
 ## Contents
 
@@ -58,13 +59,13 @@ Adjust `T` and the path of the ulanzi-d200-linux clone to your setup.
 
 ```bash
 sudo apt install ydotool
-T=~/Projekte/ulanzi-d200-tools
+T=~/Projekte/ulanzi-d200-tools   ### <--- change this to your path (this repository)
 # layouts, icons and helper layout first, so install.sh does not create its own icons dir
 mkdir -p ~/.config/ulanzi
 ln -s $T/my-layouts/apps $T/my-layouts/icons $T/my-layouts/wide-black.yaml ~/.config/ulanzi/
 cp $T/my-layouts/apps/default.yaml ~/.config/ulanzi/config.yaml
 
-cd ~/Projekte/ulanzi-d200-linux
+cd ~/Projekte/ulanzi-d200-linux   ### <--- change this to your path (your ulanzi-d200-linux clone)
 sudo cp 99-ulanzi.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules && sudo udevadm trigger
 bash install.sh
 # PyGObject (launching applications) comes from the system, not from pip
@@ -146,7 +147,7 @@ of the old UI without `expui/` – useful when the new UI has no icon for a func
 in `/usr/share/icons/breeze-dark/actions/`.
 
 ```bash
-J=~/apps/pycharm/lib/app-client.jar
+J=~/apps/pycharm/lib/app-client.jar   ### <--- change this to your path (your PyCharm installation)
 unzip -l $J | grep -i 'expui/run/.*_dark.svg'      # find names
 ./d200-icon "$J!expui/run/resume_dark.svg" my-layouts/icons/pycharm-resume.png Resume
 ./d200-icon - my-layouts/icons/pycharm-usages.png "Find|Usages"
