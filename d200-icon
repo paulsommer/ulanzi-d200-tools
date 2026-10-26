@@ -1,50 +1,68 @@
 #!/bin/bash
-# d200-icon - render an application's SVG icon into a 196x196 D200 button image.
+# d200-icon - render an icon or picture into a 196x196 D200 button image.
 #
 # Many applications ship their toolbar icons as SVG (JetBrains IDEs inside their
-# JAR files, KDE/GTK apps in /usr/share/icons). The icon is drawn on black, with
-# an optional function name below it. The text is part of the image because the
-# firmware draws labels with one font size per layout, too large for long names.
+# JAR files, KDE/GTK apps in /usr/share/icons); own pictures can be PNG or JPG.
+# The image is scaled to fit (aspect ratio kept) and drawn on black, with an
+# optional text below it. The text is part of the image because the firmware
+# draws labels with one font size per layout, too large for long names.
 #
-# Usage:  d200-icon <svg | -> <out.png> [text]
-#         <svg> is a file, or <archive.jar>!<path/in/archive.svg>; "-" = text only
-#         "|" in the text starts a new line
+# Usage:  d200-icon <image | -> <out.png> [text]
+#         <image> is an SVG, PNG or JPG file, or <archive.jar>!<path/in/archive.svg>;
+#         "-" = text only; "|" in the text starts a new line
 # Examples:
 #   d200-icon ~/apps/pycharm/lib/app-client.jar!expui/run/resume_dark.svg icons/pycharm-resume.png Resume
+#   d200-icon ~/Bilder/logo.png icons/logo.png "My|Logo"
 #   d200-icon - icons/pycharm-back.png Back
 # Needs rsvg-convert (apt package librsvg2-bin).
 
-VERSION="1.1.1"
-button_size=196
-icon_size=120        # without text
-icon_size_text=100   # with text below
-icon_top=20
+VERSION="1.2.0"
+# Layout values (all in px). Where they are used: search for "### <--- layout".
+button_size=196      # image size, given by the device – do not change
+icon_size=130        ### <--- layout: icon size without text
+icon_size_text=122   ### <--- layout: icon size with one text line (each further line subtracts line_height)
+text_bottom=19       ### <--- layout: distance of the last text line's baseline from the bottom edge
+text_bottom_multi=10 ### <--- layout: the same for text with two or more lines (the icon grows by the difference)
+icon_top=$text_bottom   ### <--- layout: distance of the icon from the top edge (here: same as text_bottom)
 font="Noto Sans"
-font_size=22
-line_height=26
+font_size=22         ### <--- layout: text size
+line_height=28       ### <--- layout: distance between two text lines
 text_color="#DFE1E5"
 
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
-    echo "Usage: d200-icon <svg-file | archive.jar!path.svg | -> <out.png> [text]" >&2
+    echo "Usage: d200-icon <svg/png/jpg file | archive.jar!path.svg | -> <out.png> [text]" >&2
     exit 2
 fi
 text=$3
 
+# text lines beyond the first one, and the bottom margin for this text
+extra=$(tr -cd '|' <<< "$text" | wc -c)
+bottom=$text_bottom
+[ "$extra" -gt 0 ] && bottom=$text_bottom_multi
+
 icon=""
 if [ "$1" != "-" ]; then
+    case "${1,,}" in
+        *.png)        mime="image/png" ;;
+        *.jpg|*.jpeg) mime="image/jpeg" ;;
+        *)            mime="image/svg+xml" ;;
+    esac
+    # base64 right away: PNG/JPG data contains NUL bytes, which a shell variable cannot hold
     if [[ "$1" == *'!'* ]]; then
-        svg=$(unzip -p "${1%%!*}" "${1#*!}") || { echo "d200-icon: '${1#*!}' not found in '${1%%!*}'" >&2; exit 1; }
+        data=$(set -o pipefail; unzip -p "${1%%!*}" "${1#*!}" | base64 -w0) || { echo "d200-icon: '${1#*!}' not found in '${1%%!*}'" >&2; exit 1; }
     else
-        svg=$(cat "$1") || exit 1
+        data=$(base64 -w0 "$1") || exit 1
     fi
+    ### <--- layout: icon size (icon_size, icon_size_text, line_height)
     size=$icon_size
     if [ -n "$text" ]; then
-        # each extra text line takes its height from the icon
-        extra=$(tr -cd '|' <<< "$text" | wc -c)
-        size=$(( icon_size_text - extra * line_height ))
+        # each extra text line takes its height from the icon,
+        # the icon gets the space the text moves down with several lines
+        size=$(( icon_size_text - extra * line_height + text_bottom - bottom ))
     fi
+    ### <--- layout: icon position – horizontally centered, top edge at icon_top
     icon="<image x=\"$(( (button_size - size) / 2 ))\" y=\"$icon_top\" width=\"$size\" height=\"$size\"
- href=\"data:image/svg+xml;base64,$(printf '%s' "$svg" | base64 -w0)\"/>"
+ href=\"data:$mime;base64,$data\"/>"
 fi
 
 lines=""
@@ -52,9 +70,10 @@ if [ -n "$text" ]; then
     text=$(sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' <<< "$text")
     IFS='|' read -ra parts <<< "$text"
     count=${#parts[@]}
+    ### <--- layout: text position (y = baseline of the first line; text_bottom(_multi), line_height, font_size)
     if [ -n "$icon" ]; then
-        # below the icon, last line near the bottom edge
-        y=$(( button_size - 28 - (count - 1) * line_height ))
+        # below the icon, last line "bottom" above the bottom edge
+        y=$(( button_size - bottom - (count - 1) * line_height ))
     else
         # vertically centered
         y=$(( button_size / 2 + font_size / 3 - (count - 1) * line_height / 2 ))

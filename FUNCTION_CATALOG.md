@@ -9,9 +9,17 @@ aliases ctrl/shift/alt/altgr/super), presses all keys in order and releases them
 
 ## d200-icon
 
-No functions. Reads an SVG from a file or from `archive.jar!path.svg` (via `unzip -p`), or none with `-`, and builds a
-wrapper SVG (icon as base64 data URI plus optional text lines split at `|`) that `rsvg-convert` renders as a black
-196×196 button image. Icon 120 px without text, 100 px minus 26 px per extra text line with text; text-only is centered.
+No functions. Reads an SVG, PNG or JPG file (type by extension), an SVG from `archive.jar!path.svg` (via `unzip -p`), or
+none with `-`, and builds a wrapper SVG (image as base64 data URI, scaled to fit with aspect ratio kept, plus optional
+text lines split at `|`) that `rsvg-convert` renders as a black
+196×196 button image. Icon size and margins come from the layout values at the top of the script (marked `### <--- layout`); with two or
+more text lines the text moves closer to the bottom edge (`text_bottom_multi`) and the icon grows by that difference;
+text-only is centered.
+
+## my-layouts/make-icons.sh
+
+No functions. One `d200-icon` call per key image (PyCharm JAR, GIMP 3 icon themes, Breeze, hicolor, own SVGs in
+`my-layouts/svg/`), output to `my-layouts/icons/`; images not made with `d200-icon` are listed in the closing comment.
 
 ## d200-focus
 
