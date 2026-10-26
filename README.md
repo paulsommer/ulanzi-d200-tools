@@ -1,5 +1,7 @@
 # ulanzi-d200-tools
 
+*Deutsch: [README.de.md](README.de.md)*
+
 The **Ulanzi D200** is a stream controller: a small desk keypad with 13 display keys and one wide display.
 [racerxdl/ulanzi-d200-linux](https://github.com/racerxdl/ulanzi-d200-linux) makes it usable on Linux. This project
 adds what I needed on top of it with KDE Plasma 6 on Wayland: keys that send keyboard shortcuts (via `ydotool`,
@@ -87,7 +89,7 @@ the D200 and plug it in again.
 - The application name is the window class without prefix: `org.kde.konsole` → `konsole.yaml`. The names are shown by
   `journalctl --user -u d200-focus -f` (e.g. `focus: gimp -> default`).
 - **Only edit the files in `apps/`.** `config.yaml` is overwritten on every switch.
-- A changed file is picked up the next time its layout is selected, immediately with
+- A changed file is picked up the next time its layout is selected, or immediately with
   `systemctl --user restart d200-focus`.
 - Broken layouts are rejected and the current one stays active. The error message is in the journal of `d200-focus`.
 - Comments (`#`) and blank lines are allowed and are kept.
