@@ -1,0 +1,225 @@
+#!/usr/bin/python3
+"""d200-focus - switch the Ulanzi D200 layout depending on the focused application.
+
+KDE Wayland does not expose the active window to normal programs, so this service
+loads a tiny KWin script that reports every window activation back via D-Bus.
+For each activation the layout ~/.config/ulanzi/apps/<app>.yaml is looked up
+(falling back to default.yaml), copied to ~/.config/ulanzi/config.yaml and the
+ulanzi-daemon is restarted, which pushes the new buttons to the device.
+
+The firmware draws its clock (wide display without entry) on the Ulanzi logo. After
+service start, resume and USB plug-in (D-Bus method "prime", called by
+d200-wide-black.service via udev) the helper layout ~/.config/ulanzi/wide-black.yaml is sent
+first, which stores a black background in the device; the real layout follows.
+
+Runs as systemd user service d200-focus.service.
+"""
+
+import os
+import signal
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import dbus
+import dbus.mainloop.glib
+import dbus.service
+from gi.repository import GLib, GLibUnix
+
+VERSION = "1.1.2"
+BUS_NAME = "io.github.paulsommer.D200Focus"
+PLUGIN_NAME = "d200-focus"
+ULANZI_DIR = Path.home() / ".config/ulanzi"
+APPS_DIR = ULANZI_DIR / "apps"
+CONFIG_FILE = ULANZI_DIR / "config.yaml"
+# Must live next to config.yaml so that relative image paths (./icons/...) resolve
+CHECK_FILE = ULANZI_DIR / ".d200-focus-check.yaml"
+VALIDATOR = Path.home() / ".local/ulanzi/venv/bin/ulanzi-manager"
+DEFAULT_LAYOUT = "default"
+WIDE_BLACK_FILE = ULANZI_DIR / "wide-black.yaml"
+# Wait for focus to settle (e.g. Alt+Tab) before restarting the daemon
+DEBOUNCE_MS = 300
+# Wait for the device to settle after resume or plug-in before sending the black background
+PRIME_DELAY_MS = 2000
+# Time the daemon needs to push the helper layout before the real layout follows
+PRIME_DURATION_MS = 1000
+
+KWIN_SCRIPT = f"""
+function report(window) {{
+    if (window)
+        callDBus("{BUS_NAME}", "/", "{BUS_NAME}", "activated", String(window.resourceClass));
+}}
+workspace.windowActivated.connect(report);
+report(workspace.activeWindow);
+"""
+
+
+# --------------------------------------------------------------------------
+def layout_for(app_class: str) -> str:
+    """Return the layout name for a window class.
+
+    Wayland window classes are often reverse-DNS app ids (org.kde.konsole),
+    so both the full class and its last component are tried. This lets the
+    user simply name the file konsole.yaml.
+
+    Args:
+        app_class: resourceClass reported by KWin.
+
+    Returns:
+        Layout name (file name without .yaml).
+    """
+    app_class = app_class.lower()
+    for name in (app_class, app_class.rsplit(".", 1)[-1]):
+        if name and (APPS_DIR / f"{name}.yaml").is_file():
+            return name
+    return DEFAULT_LAYOUT
+
+
+class FocusService(dbus.service.Object):
+    """D-Bus object called by the KWin script on every window activation."""
+
+    # --------------------------------------------------------------------------
+    def __init__(self, bus: dbus.SessionBus):
+        """Register the object on the session bus."""
+        super().__init__(dbus.service.BusName(BUS_NAME, bus), "/")
+        self.current_layout = None
+        self.pending_layout = DEFAULT_LAYOUT
+        self.timer_id = None
+        self.priming = False
+        self.prime_timer_id = None
+
+    # --------------------------------------------------------------------------
+    @dbus.service.method(BUS_NAME, in_signature="s")
+    def activated(self, app_class: str):
+        """Remember the wanted layout and (re)start the debounce timer.
+
+        Args:
+            app_class: resourceClass of the newly focused window.
+        """
+        layout = layout_for(app_class)
+        print(f"focus: {app_class} -> {layout}", flush=True)
+        self.pending_layout = layout
+        if self.timer_id:
+            GLib.source_remove(self.timer_id)
+        self.timer_id = GLib.timeout_add(DEBOUNCE_MS, self.apply)
+
+    # --------------------------------------------------------------------------
+    @dbus.service.method(BUS_NAME, in_signature="")
+    def prime(self):
+        """Schedule sending the black wide display background.
+
+        Called at service start, after resume and by d200-wide-black.service when
+        the D200 is plugged in - in all these cases the firmware has reloaded its
+        logo. Layout switches are held back until the real layout is sent again.
+        """
+        print("wide display: black background requested", flush=True)
+        self.priming = True
+        if self.prime_timer_id:
+            GLib.source_remove(self.prime_timer_id)
+        self.prime_timer_id = GLib.timeout_add(PRIME_DELAY_MS, self.send_wide_black)
+
+    # --------------------------------------------------------------------------
+    def on_sleep(self, start: bool):
+        """logind PrepareForSleep handler: prime again after resume.
+
+        Args:
+            start: True before suspend, False after resume.
+        """
+        if not start:
+            self.prime()
+
+    # --------------------------------------------------------------------------
+    def send_wide_black(self) -> bool:
+        """Push the helper layout, then schedule the real layout."""
+        self.prime_timer_id = None
+        shutil.copyfile(WIDE_BLACK_FILE, CONFIG_FILE)
+        subprocess.run(["systemctl", "--user", "restart", "ulanzi-daemon.service"])
+        GLib.timeout_add(PRIME_DURATION_MS, self.prime_done)
+        return False
+
+    # --------------------------------------------------------------------------
+    def prime_done(self) -> bool:
+        """Send the wanted layout again after the helper layout."""
+        self.priming = False
+        self.current_layout = None
+        return self.apply()
+
+    # --------------------------------------------------------------------------
+    def apply(self) -> bool:
+        """Copy the pending layout to config.yaml and restart the daemon if it changed.
+
+        The layout is validated with ulanzi-manager first. A broken layout would
+        make the daemon fail to start and leave the device showing the previous
+        buttons without any visible reason, so it is rejected and logged instead.
+        """
+        self.timer_id = None
+        if self.priming:
+            return False  # prime_done() applies the pending layout
+        layout = self.pending_layout
+        if layout != self.current_layout:
+            source = APPS_DIR / f"{layout}.yaml"
+            if not source.is_file():
+                print(f"missing layout file: {source}", file=sys.stderr, flush=True)
+                return False
+            shutil.copyfile(source, CHECK_FILE)
+            check = subprocess.run([str(VALIDATOR), "validate", str(CHECK_FILE)], capture_output=True, text=True)
+            if check.returncode != 0:
+                CHECK_FILE.unlink()
+                errors = [line for line in check.stderr.splitlines() if "ERROR" in line]
+                print(f"invalid layout {source}, keeping previous:", *errors, sep="\n  ", file=sys.stderr, flush=True)
+                return False
+            os.replace(CHECK_FILE, CONFIG_FILE)
+            subprocess.run(["systemctl", "--user", "--no-block", "restart", "ulanzi-daemon.service"])
+            print(f"layout: {layout}", flush=True)
+            self.current_layout = layout
+        return False
+
+
+# --------------------------------------------------------------------------
+def load_kwin_script(bus: dbus.SessionBus) -> None:
+    """Write the KWin script to the runtime dir and load it into KWin.
+
+    An instance left over from a previous run is unloaded first, otherwise
+    KWin refuses to load a script with the same plugin name.
+    """
+    path = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "d200-focus-kwin.js"
+    path.write_text(KWIN_SCRIPT)
+    scripting = dbus.Interface(bus.get_object("org.kde.KWin", "/Scripting"), "org.kde.kwin.Scripting")
+    if scripting.isScriptLoaded(PLUGIN_NAME):
+        scripting.unloadScript(PLUGIN_NAME)
+    # loadScript is overloaded, so the two-argument variant must be selected explicitly
+    scripting.loadScript(str(path), PLUGIN_NAME, signature="ss")
+    scripting.start()
+
+
+# --------------------------------------------------------------------------
+def unload_kwin_script(bus: dbus.SessionBus) -> None:
+    """Remove the KWin script again when the service stops."""
+    scripting = dbus.Interface(bus.get_object("org.kde.KWin", "/Scripting"), "org.kde.kwin.Scripting")
+    scripting.unloadScript(PLUGIN_NAME)
+
+
+# --------------------------------------------------------------------------
+def main() -> None:
+    """Start the D-Bus service, load the KWin script and run until terminated."""
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    bus = dbus.SessionBus()
+    service = FocusService(bus)
+    service.prime()
+    dbus.SystemBus().add_signal_receiver(
+        service.on_sleep, signal_name="PrepareForSleep",
+        dbus_interface="org.freedesktop.login1.Manager", bus_name="org.freedesktop.login1")
+    load_kwin_script(bus)
+
+    loop = GLib.MainLoop()
+    GLibUnix.signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, loop.quit)  # from systemd
+    GLibUnix.signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, loop.quit)   # Ctrl+C
+    try:
+        loop.run()
+    finally:
+        unload_kwin_script(bus)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,9 @@
+# Started by udev (udev/99-d200-focus.rules) whenever the D200 is plugged in.
+# Asks d200-focus to send the black wide display background again.
+# The "-" ignores the error when d200-focus is not running yet (e.g. at login).
+[Unit]
+Description=Ulanzi D200 black wide display background after plug-in
+
+[Service]
+Type=oneshot
+ExecStart=-/usr/bin/busctl --user call io.github.paulsommer.D200Focus / io.github.paulsommer.D200Focus prime

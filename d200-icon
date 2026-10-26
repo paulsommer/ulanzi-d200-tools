@@ -1,0 +1,74 @@
+#!/bin/bash
+# d200-icon - render an application's SVG icon into a 196x196 D200 button image.
+#
+# Many applications ship their toolbar icons as SVG (JetBrains IDEs inside their
+# JAR files, KDE/GTK apps in /usr/share/icons). The icon is drawn on black, with
+# an optional function name below it. The text is part of the image because the
+# firmware draws labels with one font size per layout, too large for long names.
+#
+# Usage:  d200-icon <svg | -> <out.png> [text]
+#         <svg> is a file, or <archive.jar>!<path/in/archive.svg>; "-" = text only
+#         "|" in the text starts a new line
+# Examples:
+#   d200-icon ~/apps/pycharm/lib/app-client.jar!expui/run/resume_dark.svg icons/pycharm-resume.png Resume
+#   d200-icon - icons/pycharm-back.png Back
+# Needs rsvg-convert (apt package librsvg2-bin).
+
+VERSION="1.1.1"
+button_size=196
+icon_size=120        # without text
+icon_size_text=100   # with text below
+icon_top=20
+font="Noto Sans"
+font_size=22
+line_height=26
+text_color="#DFE1E5"
+
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+    echo "Usage: d200-icon <svg-file | archive.jar!path.svg | -> <out.png> [text]" >&2
+    exit 2
+fi
+text=$3
+
+icon=""
+if [ "$1" != "-" ]; then
+    if [[ "$1" == *'!'* ]]; then
+        svg=$(unzip -p "${1%%!*}" "${1#*!}") || { echo "d200-icon: '${1#*!}' not found in '${1%%!*}'" >&2; exit 1; }
+    else
+        svg=$(cat "$1") || exit 1
+    fi
+    size=$icon_size
+    if [ -n "$text" ]; then
+        # each extra text line takes its height from the icon
+        extra=$(tr -cd '|' <<< "$text" | wc -c)
+        size=$(( icon_size_text - extra * line_height ))
+    fi
+    icon="<image x=\"$(( (button_size - size) / 2 ))\" y=\"$icon_top\" width=\"$size\" height=\"$size\"
+ href=\"data:image/svg+xml;base64,$(printf '%s' "$svg" | base64 -w0)\"/>"
+fi
+
+lines=""
+if [ -n "$text" ]; then
+    text=$(sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' <<< "$text")
+    IFS='|' read -ra parts <<< "$text"
+    count=${#parts[@]}
+    if [ -n "$icon" ]; then
+        # below the icon, last line near the bottom edge
+        y=$(( button_size - 28 - (count - 1) * line_height ))
+    else
+        # vertically centered
+        y=$(( button_size / 2 + font_size / 3 - (count - 1) * line_height / 2 ))
+    fi
+    for part in "${parts[@]}"; do
+        lines+="<text x=\"$(( button_size / 2 ))\" y=\"$y\">$part</text>"
+        y=$(( y + line_height ))
+    done
+fi
+
+rsvg-convert --output="$2" <<EOF
+<svg xmlns="http://www.w3.org/2000/svg" width="$button_size" height="$button_size">
+<rect width="$button_size" height="$button_size" fill="black"/>
+$icon
+<g font-family="$font" font-size="$font_size" fill="$text_color" text-anchor="middle">$lines</g>
+</svg>
+EOF

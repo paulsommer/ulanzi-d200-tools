@@ -1,0 +1,13 @@
+[Unit]
+Description=Ulanzi D200 layout per focused application
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/d200-focus
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

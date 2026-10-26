@@ -1,0 +1,21 @@
+# Helper layout sent by d200-focus before the real layout: stores a black image
+# as wide display background, so the firmware clock (button 13 = null) is not
+# drawn on the Ulanzi logo. Not in apps/, so it is never picked for a window.
+buttons:
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- image: ./icons/blank-wide.png
+  label: ''
+  display_mode: background
+  action_enabled: false

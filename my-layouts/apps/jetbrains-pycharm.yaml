@@ -1,0 +1,151 @@
+# PyCharm layout (window class jetbrains-pycharm)
+#   row 1:  Find usages | Goto implementation | Search everywhere | prev track | next track
+#   row 2:  Debug | Step over | Step into my code | Step out | play/pause
+#   row 3:  Back | Forward | Resume program
+brightness: 100
+label_style:
+  Align: bottom
+  Color: 16777215
+  FontName: Roboto
+  ShowTitle: false
+  Size: 10
+  Weight: 80
+obs:
+  host: localhost
+  port: 4444
+  password: null
+buttons:
+
+# 0: Find usages
+- image: ./icons/pycharm-usages.png
+  icon_source: ./icons/pycharm-usages.png
+  icon_scale: 100
+  content_margin: 0
+  label: Shift+Alt+7
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key shift+alt+7
+
+# 1: Go to implementation(s)
+- image: ./icons/pycharm-impl.png
+  icon_source: ./icons/pycharm-impl.png
+  icon_scale: 100
+  content_margin: 0
+  label: Ctrl+Alt+B
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key ctrl+alt+b
+
+# 2: Search everywhere (double Shift)
+- image: ./icons/pycharm-search.png
+  icon_source: ./icons/pycharm-search.png
+  icon_scale: 100
+  content_margin: 0
+  label: Shift Shift
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key shift && ~/.local/bin/d200-key shift
+
+# 3: previous track
+- image: ./icons/media-previous.png
+  icon_source: ./icons/media-previous.png
+  icon_scale: 100
+  content_margin: 0
+  label: ''
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key previoussong
+
+# 4: next track
+- image: ./icons/media-next.png
+  icon_source: ./icons/media-next.png
+  icon_scale: 100
+  content_margin: 0
+  label: ''
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key nextsong
+
+# 5: Debug
+- image: ./icons/pycharm-debug.png
+  icon_source: ./icons/pycharm-debug.png
+  icon_scale: 100
+  content_margin: 0
+  label: Shift+F9
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key shift+f9
+
+# 6: Step over
+- image: ./icons/pycharm-step-over.png
+  icon_source: ./icons/pycharm-step-over.png
+  icon_scale: 100
+  content_margin: 0
+  label: F8
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key f8
+
+# 7: Step into my code
+- image: ./icons/pycharm-step-into.png
+  icon_source: ./icons/pycharm-step-into.png
+  icon_scale: 100
+  content_margin: 0
+  label: Alt+Shift+F7
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key alt+shift+f7
+
+# 8: Step out
+- image: ./icons/pycharm-step-out.png
+  icon_source: ./icons/pycharm-step-out.png
+  icon_scale: 100
+  content_margin: 0
+  label: Shift+F8
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key shift+f8
+
+# 9: play/pause
+- image: ./icons/media-playpause.png
+  icon_source: ./icons/media-playpause.png
+  icon_scale: 100
+  content_margin: 0
+  label: ''
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key playpause
+
+# 10: Back
+- image: ./icons/pycharm-back.png
+  icon_source: ./icons/pycharm-back.png
+  icon_scale: 100
+  content_margin: 0
+  label: Ctrl+Alt+Left
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key ctrl+alt+left
+
+# 11: Forward
+- image: ./icons/pycharm-forward.png
+  icon_source: ./icons/pycharm-forward.png
+  icon_scale: 100
+  content_margin: 0
+  label: Ctrl+Alt+Right
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key ctrl+alt+right
+
+# 12: Resume program
+- image: ./icons/pycharm-resume.png
+  icon_source: ./icons/pycharm-resume.png
+  icon_scale: 100
+  content_margin: 0
+  label: F9
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key f9
+
+# 13:
+- null
+background: null

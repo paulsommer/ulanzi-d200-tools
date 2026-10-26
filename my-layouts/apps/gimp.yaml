@@ -1,0 +1,152 @@
+# GIMP layout (window class gimp), icons from the Legacy theme
+# (undo, redo and select none from Default, Legacy has none)
+#   row 1:  Undo | Redo | Fit image in window | prev track | next track
+#   row 2:  Rect select | Select none | Move | Crop | play/pause
+#   row 3:  Paintbrush | Eraser | Text
+brightness: 100
+label_style:
+  Align: bottom
+  Color: 16777215
+  FontName: Roboto
+  ShowTitle: false
+  Size: 10
+  Weight: 80
+obs:
+  host: localhost
+  port: 4444
+  password: null
+buttons:
+
+# 0: Undo (d200-key uses scancodes: US "y" is the German Z key)
+- image: ./icons/gimp-undo.png
+  icon_source: ./icons/gimp-undo.png
+  icon_scale: 100
+  content_margin: 0
+  label: Ctrl+Z
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key ctrl+y
+
+# 1: Redo (US "z" = German Y key)
+- image: ./icons/gimp-redo.png
+  icon_source: ./icons/gimp-redo.png
+  icon_scale: 100
+  content_margin: 0
+  label: Ctrl+Y
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key ctrl+z
+
+# 2: Fit image in window
+- image: ./icons/gimp-zoom-fit.png
+  icon_source: ./icons/gimp-zoom-fit.png
+  icon_scale: 100
+  content_margin: 0
+  label: Shift+Ctrl+J
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key shift+ctrl+j
+
+# 3: previous track
+- image: ./icons/media-previous.png
+  icon_source: ./icons/media-previous.png
+  icon_scale: 100
+  content_margin: 0
+  label: ''
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key previoussong
+
+# 4: next track
+- image: ./icons/media-next.png
+  icon_source: ./icons/media-next.png
+  icon_scale: 100
+  content_margin: 0
+  label: ''
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key nextsong
+
+# 5: Rectangle select
+- image: ./icons/gimp-rect-select.png
+  icon_source: ./icons/gimp-rect-select.png
+  icon_scale: 100
+  content_margin: 0
+  label: R
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key r
+
+# 6: Select none
+- image: ./icons/gimp-select-none.png
+  icon_source: ./icons/gimp-select-none.png
+  icon_scale: 100
+  content_margin: 0
+  label: Shift+Ctrl+A
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key shift+ctrl+a
+
+# 7: Move
+- image: ./icons/gimp-move.png
+  icon_source: ./icons/gimp-move.png
+  icon_scale: 100
+  content_margin: 0
+  label: M
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key m
+
+# 8: Crop
+- image: ./icons/gimp-crop.png
+  icon_source: ./icons/gimp-crop.png
+  icon_scale: 100
+  content_margin: 0
+  label: Shift+C
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key shift+c
+
+# 9: play/pause
+- image: ./icons/media-playpause.png
+  icon_source: ./icons/media-playpause.png
+  icon_scale: 100
+  content_margin: 0
+  label: ''
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key playpause
+
+# 10: Paintbrush
+- image: ./icons/gimp-paintbrush.png
+  icon_source: ./icons/gimp-paintbrush.png
+  icon_scale: 100
+  content_margin: 0
+  label: P
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key p
+
+# 11: Eraser
+- image: ./icons/gimp-eraser.png
+  icon_source: ./icons/gimp-eraser.png
+  icon_scale: 100
+  content_margin: 0
+  label: Shift+E
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key shift+e
+
+# 12: Text
+- image: ./icons/gimp-text.png
+  icon_source: ./icons/gimp-text.png
+  icon_scale: 100
+  content_margin: 0
+  label: T
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key t
+
+# 13:
+- null
+background: null

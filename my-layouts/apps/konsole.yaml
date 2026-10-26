@@ -1,0 +1,111 @@
+brightness: 100
+label_style:
+  Align: bottom
+  Color: 16777215
+  FontName: Roboto
+  ShowTitle: false
+  Size: 10
+  Weight: 80
+obs:
+  host: localhost
+  port: 4444
+  password: null
+buttons:
+
+# 0: Firefox
+- image: ./icons/firefox.png
+  icon_source: ./icons/firefox.png
+  icon_scale: 100
+  content_margin: 0
+  label: Firefox
+  action: app
+  params:
+    name: firefox
+
+# 1: Konsole
+- image: ./icons/terminal.png
+  icon_source: ./icons/terminal.png
+  icon_scale: 100
+  content_margin: 0
+  label: Konsole
+  action: command
+  params:
+    cmd: konsole
+
+# 2:
+- enabled: false
+  background_tile: ./icons/blank.png
+
+# 3: previous track
+- image: ./icons/media-previous.png
+  icon_source: ./icons/media-previous.png
+  icon_scale: 100
+  content_margin: 0
+  label: ''
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key previoussong
+
+# 4: next track
+- image: ./icons/media-next.png
+  icon_source: ./icons/media-next.png
+  icon_scale: 100
+  content_margin: 0
+  label: ''
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key nextsong
+
+# 5: Copy (Ctrl+Shift+C)
+- image: ./icons/copy.png
+  icon_source: ./icons/copy.png
+  icon_scale: 100
+  content_margin: 0
+  label: Ctrl+Shift+C
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key ctrl+shift+c
+
+# 6: Paste (Ctrl+Shift+V)
+- image: ./icons/paste.png
+  icon_source: ./icons/paste.png
+  icon_scale: 100
+  content_margin: 0
+  label: Ctrl+Shift+V
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key ctrl+shift+v
+
+# 7:
+- enabled: false
+  background_tile: ./icons/blank.png
+
+# 8:
+- enabled: false
+  background_tile: ./icons/blank.png
+
+# 9: play/pause
+- image: ./icons/media-playpause.png
+  icon_source: ./icons/media-playpause.png
+  icon_scale: 100
+  content_margin: 0
+  label: ''
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key playpause
+
+# 10:
+- enabled: false
+  background_tile: ./icons/blank.png
+
+# 11:
+- enabled: false
+  background_tile: ./icons/blank.png
+
+# 12:
+- enabled: false
+  background_tile: ./icons/blank.png
+
+# 13:
+- null
+background: null

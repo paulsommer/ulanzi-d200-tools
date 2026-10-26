@@ -1,0 +1,43 @@
+#!/bin/bash
+# d200-key - send a key combination via ydotool (works on Wayland and X11).
+#
+# Used by the Ulanzi D200 manager (~/.config/ulanzi/config.yaml) as a
+# "command" action, because its built-in "key" action needs xdotool (X11 only).
+#
+# Usage:  d200-key ctrl+shift+f1
+#         d200-key alt+tab
+# Key names are the KEY_* names from linux/input-event-codes.h (case-insensitive),
+# plus the aliases ctrl, shift, alt, altgr, super/meta/win.
+
+VERSION="1.0.0"
+header=/usr/include/linux/input-event-codes.h
+
+if [ $# -ne 1 ]; then
+    echo "Usage: d200-key <key>[+<key>...]   e.g. d200-key ctrl+shift+f1" >&2
+    exit 2
+fi
+
+codes=()
+IFS='+' read -ra keys <<< "${1^^}"
+for key in "${keys[@]}"; do
+    case "$key" in
+        CTRL)            key=LEFTCTRL ;;
+        SHIFT)           key=LEFTSHIFT ;;
+        ALT)             key=LEFTALT ;;
+        ALTGR)           key=RIGHTALT ;;
+        SUPER|META|WIN)  key=LEFTMETA ;;
+    esac
+    code=$(awk -v name="KEY_$key" '$1 == "#define" && $2 == name { print $3; exit }' "$header")
+    if [[ ! "$code" =~ ^[0-9]+$ ]]; then
+        echo "d200-key: unknown key '$key'" >&2
+        exit 1
+    fi
+    codes+=("$code")
+done
+
+# Press all keys in order, release in reverse order
+args=()
+for code in "${codes[@]}"; do args+=("$code:1"); done
+for (( i=${#codes[@]}-1; i>=0; i-- )); do args+=("${codes[i]}:0"); done
+
+exec ydotool key "${args[@]}"
