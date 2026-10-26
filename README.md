@@ -17,7 +17,7 @@ It is my personal setup (Kubuntu 26.04, Plasma 6, Wayland), shared as it is. The
 | File | Purpose |
 |---|---|
 | `d200-key` | sends a key combination such as `ctrl+shift+f1` via `ydotool` (replacement for the `key` action, which needs `xdotool` and does not work on Wayland) |
-| `d200-icon` | renders an application's SVG icon (from a file or from a JAR) and/or the function name as a 196×196 key image on black; needs `librsvg2-bin` |
+| `d200-icon` | renders an SVG icon of an application (from a file or from a JAR), an own PNG/JPG picture and/or a text as a 196×196 key image on black, scaled to fit; needs `librsvg2-bin` |
 | `d200-focus` | service: on every window switch it picks the layout `~/.config/ulanzi/apps/<application>.yaml`, validates it, copies it to `config.yaml` and restarts the daemon |
 | `systemd/d200-focus.service` | user unit for `d200-focus` (starts with the Plasma session) |
 | `systemd/d200-wide-black.service` | user unit started by udev when the D200 is plugged in; makes `d200-focus` send the black background again |
@@ -26,6 +26,8 @@ It is my personal setup (Kubuntu 26.04, Plasma 6, Wayland), shared as it is. The
 | `my-layouts/apps/*.yaml` | key layout per application (`default.yaml`, `konsole.yaml`, ...) |
 | `my-layouts/wide-black.yaml` | helper layout: only a black background for the wide display (see "Clock on black") |
 | `my-layouts/icons/*.png` | key images (196×196, `blank-wide.png` 458×196) |
+| `my-layouts/make-icons.sh` | all `d200-icon` calls behind the key images: recreates them (e.g. after changing font or texts) and serves as a template for new keys |
+| `my-layouts/svg/` | own, modified SVG icons used by `make-icons.sh` |
 | `ulanzi-d200-feature-proposals.md` | feature proposals for the author of ulanzi-d200-linux |
 | `ulanzi-d200-issues.md` | GitHub issue texts derived from them: a compact version for first contact, detailed single issues for follow-up questions |
 
@@ -142,6 +144,7 @@ Other actions: `app` (launch an application, `params: {name: firefox}`), `comman
 Many applications ship their toolbar icons as SVG. `d200-icon` draws such an icon on black and optionally writes the
 function name below it (`|` = new line); with `-` instead of an SVG it becomes a text-only key. The text is part of the
 image because the firmware draws labels in only one font size per layout – set `ShowTitle: false` in the layout.
+Own pictures work too: PNG and JPG are scaled to fit, keeping their aspect ratio.
 JetBrains IDEs keep them in `lib/app-client.jar` under `expui/` (variant `_dark` for the black background), the icons
 of the old UI without `expui/` – useful when the new UI has no icon for a function any more. KDE applications keep them
 in `/usr/share/icons/breeze-dark/actions/`.
@@ -151,7 +154,11 @@ J=~/apps/pycharm/lib/app-client.jar   ### <--- change this to your path (your Py
 unzip -l $J | grep -i 'expui/run/.*_dark.svg'      # find names
 ./d200-icon "$J!expui/run/resume_dark.svg" my-layouts/icons/pycharm-resume.png Resume
 ./d200-icon - my-layouts/icons/pycharm-usages.png "Find|Usages"
+./d200-icon ~/Pictures/logo.png my-layouts/icons/logo.png "My|Logo"   # own PNG/JPG, scaled to fit
 ```
+
+`my-layouts/make-icons.sh` contains the calls for all existing key images. Add new keys there, too, so all images can
+be recreated with one command.
 
 ### Clock on black
 

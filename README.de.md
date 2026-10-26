@@ -20,7 +20,7 @@ klein und sollten sich leicht anpassen lassen.
 | Datei | Zweck |
 |---|---|
 | `d200-key` | sendet eine Tastenkombination wie `ctrl+shift+f1` per `ydotool` (Ersatz für die Aktion `key`, die `xdotool` braucht und unter Wayland nicht geht) |
-| `d200-icon` | rendert ein SVG-Icon eines Programms (Datei oder aus einer JAR) und/oder den Funktionsnamen als 196×196-Tastenbild auf Schwarz; braucht `librsvg2-bin` |
+| `d200-icon` | rendert ein SVG-Icon eines Programms (Datei oder aus einer JAR), ein eigenes PNG/JPG-Bild und/oder einen Text als 196×196-Tastenbild auf Schwarz, passend skaliert; braucht `librsvg2-bin` |
 | `d200-focus` | Dienst: wählt beim Fensterwechsel das Layout `~/.config/ulanzi/apps/<programm>.yaml`, prüft es, kopiert es auf `config.yaml` und startet den Daemon neu |
 | `systemd/d200-focus.service` | User-Unit für `d200-focus` (startet mit der Plasma-Sitzung) |
 | `systemd/d200-wide-black.service` | User-Unit, von udev beim Einstecken des D200 gestartet; lässt `d200-focus` den schwarzen Hintergrund neu schicken |
@@ -29,6 +29,8 @@ klein und sollten sich leicht anpassen lassen.
 | `my-layouts/apps/*.yaml` | Tastenbelegung je Programm (`default.yaml`, `konsole.yaml`, ...) |
 | `my-layouts/wide-black.yaml` | Hilfslayout: nur schwarzer Hintergrund für das große Display (siehe „Uhr auf Schwarz“) |
 | `my-layouts/icons/*.png` | Tastenbilder (196×196, `blank-wide.png` 458×196) |
+| `my-layouts/make-icons.sh` | alle `d200-icon`-Aufrufe hinter den Tastenbildern: erzeugt sie neu (z. B. nach Änderung von Schrift oder Texten) und dient als Vorlage für neue Tasten |
+| `my-layouts/svg/` | eigene, abgewandelte SVG-Icons, die `make-icons.sh` verwendet |
 | `ulanzi-d200-feature-proposals.md` | Vorschläge an den Autor von ulanzi-d200-linux (englisch) |
 | `ulanzi-d200-issues.md` | GitHub-Issue-Texte daraus (englisch): kompakte Variante für den Erstkontakt, ausführliche Einzel-Issues für Rückfragen |
 
@@ -145,6 +147,7 @@ Weitere Aktionen: `app` (Programm starten, `params: {name: firefox}`), `command`
 Viele Programme haben ihre Symbolleisten-Icons als SVG dabei. `d200-icon` zeichnet so ein Icon auf Schwarz und schreibt
 optional den Funktionsnamen darunter (`|` = neue Zeile); mit `-` statt SVG wird es eine reine Text-Taste. Der Text steckt
 im Bild, weil die Firmware Labels nur mit einer Schriftgröße je Layout zeichnet – im Layout dann `ShowTitle: false`.
+Eigene Bilder gehen auch: PNG und JPG werden passend skaliert, das Seitenverhältnis bleibt erhalten.
 Bei JetBrains-IDEs liegen sie in `lib/app-client.jar` unter `expui/` (Variante `_dark` für den schwarzen Hintergrund),
 die der alten Oberfläche ohne `expui/` – nützlich, wenn die neue für eine Funktion kein Icon mehr hat. Bei
 KDE-Programmen liegen sie in `/usr/share/icons/breeze-dark/actions/`.
@@ -154,7 +157,11 @@ J=~/apps/pycharm/lib/app-client.jar   ### <--- change this to your path (your Py
 unzip -l $J | grep -i 'expui/run/.*_dark.svg'      # find names
 ./d200-icon "$J!expui/run/resume_dark.svg" my-layouts/icons/pycharm-resume.png Resume
 ./d200-icon - my-layouts/icons/pycharm-usages.png "Find|Usages"
+./d200-icon ~/Bilder/logo.png my-layouts/icons/logo.png "Mein|Logo"   # own PNG/JPG, scaled to fit
 ```
+
+`my-layouts/make-icons.sh` enthält die Aufrufe für alle vorhandenen Tastenbilder. Neue Tasten am besten auch dort
+eintragen, dann lassen sich alle Bilder mit einem Befehl neu erzeugen.
 
 ### Uhr auf Schwarz
 
