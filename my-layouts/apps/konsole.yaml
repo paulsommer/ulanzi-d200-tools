@@ -12,35 +12,44 @@ obs:
   password: null
 buttons:
 
-# 0: Firefox
-- image: ./icons/firefox.png
-  icon_source: ./icons/firefox.png
+# 0: KeePassXC
+- image: ./icons/keepassxc.png
+  d200_icon:
+    source: /usr/share/icons/hicolor/scalable/apps/keepassxc.svg
+    text: KeePassXC
+  icon_source: ./icons/keepassxc.png
   icon_scale: 100
   content_margin: 0
-  label: Firefox
+  label: KeePassXC
   action: command
   params:
-    cmd: ~/.local/bin/d200-raise firefox  ### <--- change this to your path (where d200-raise is linked)
+    cmd: ~/.local/bin/d200-raise keepassxc  ### <--- change this to your path (where d200-raise is linked)
 
-# 1: Konsole
-- image: ./icons/terminal.png
-  icon_source: ./icons/terminal.png
+# 1: Thunderbird
+- image: ./icons/thunderbird.png
+  d200_icon:
+    source: /usr/share/icons/hicolor/256x256/apps/thunderbird.png
+    text: Thunderbird
+  icon_source: ./icons/thunderbird.png
   icon_scale: 100
   content_margin: 0
-  label: Konsole
+  label: Thunderbird
   action: command
   params:
-    cmd: ~/.local/bin/d200-raise konsole  ### <--- change this to your path (where d200-raise is linked)
+    cmd: ~/.local/bin/d200-raise thunderbird  ### <--- change this to your path (where d200-raise is linked)
 
-# 2: Dolphin
-- image: ./icons/dolphin.png
-  icon_source: ./icons/dolphin.png
+# 2: Kate
+- image: ./icons/kate.png
+  d200_icon:
+    source: /usr/share/icons/breeze-dark/apps/48/kate.svg
+    text: Kate
+  icon_source: ./icons/kate.png
   icon_scale: 100
   content_margin: 0
-  label: Dolphin
+  label: Kate
   action: command
   params:
-    cmd: ~/.local/bin/d200-raise dolphin  ### <--- change this to your path (where d200-raise is linked)
+    cmd: ~/.local/bin/d200-raise kate  ### <--- change this to your path (where d200-raise is linked)
 
 # 3: previous track
 - image: ./icons/media-previous.png
@@ -62,35 +71,35 @@ buttons:
   params:
     cmd: ~/.local/bin/d200-key nextsong  ### <--- change this to your path (where d200-key is linked)
 
-# 5: Thunderbird
-- image: ./icons/thunderbird.png
-  icon_source: ./icons/thunderbird.png
-  icon_scale: 100
-  content_margin: 0
-  label: Thunderbird
-  action: command
-  params:
-    cmd: ~/.local/bin/d200-raise thunderbird  ### <--- change this to your path (where d200-raise is linked)
+# 5:
+- enabled: false
+  background_tile: ./icons/blank.png
 
-# 6: KeePassXC
-- image: ./icons/keepassxc.png
-  icon_source: ./icons/keepassxc.png
+# 6: Firefox
+- image: ./icons/firefox.png
+  d200_icon:
+    source: /usr/share/icons/hicolor/256x256/apps/firefox.png
+    text: Firefox
+  icon_source: ./icons/firefox.png
   icon_scale: 100
   content_margin: 0
-  label: KeePassXC
+  label: Firefox
   action: command
   params:
-    cmd: ~/.local/bin/d200-raise keepassxc  ### <--- change this to your path (where d200-raise is linked)
+    cmd: ~/.local/bin/d200-raise firefox  ### <--- change this to your path (where d200-raise is linked)
 
-# 7: Kate
-- image: ./icons/kate.png
-  icon_source: ./icons/kate.png
+# 7: Dolphin
+- image: ./icons/dolphin.png
+  d200_icon:
+    source: /usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg
+    text: Dolphin
+  icon_source: ./icons/dolphin.png
   icon_scale: 100
   content_margin: 0
-  label: Kate
+  label: Dolphin
   action: command
   params:
-    cmd: ~/.local/bin/d200-raise kate  ### <--- change this to your path (where d200-raise is linked)
+    cmd: ~/.local/bin/d200-raise dolphin  ### <--- change this to your path (where d200-raise is linked)
 
 # 8:
 - enabled: false
@@ -106,12 +115,25 @@ buttons:
   params:
     cmd: ~/.local/bin/d200-key playpause  ### <--- change this to your path (where d200-key is linked)
 
-# 10:
-- enabled: false
-  background_tile: ./icons/blank.png
+# 10: Konsole
+- image: ./icons/terminal.png
+  d200_icon:
+    source: /usr/share/icons/breeze-dark/apps/48/utilities-terminal.svg
+    text: Konsole
+  icon_source: ./icons/terminal.png
+  icon_scale: 100
+  content_margin: 0
+  label: Konsole
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-raise konsole  ### <--- change this to your path (where d200-raise is linked)
 
 # 11: Copy (Ctrl+Shift+C)
-- image: ./icons/copy.png
+- image: ./icons/konsole-copy-ctrl-shift-c.png
+  d200_icon:
+    source: /usr/share/icons/breeze-dark/actions/22/edit-copy-symbolic.svg
+    text: Kopieren | Ctrl-Shift-C
+    background: '#3a3838'
   icon_source: ./icons/copy.png
   icon_scale: 100
   content_margin: 0
@@ -121,7 +143,11 @@ buttons:
     cmd: ~/.local/bin/d200-key ctrl+shift+c  ### <--- change this to your path (where d200-key is linked)
 
 # 12: Paste (Ctrl+Shift+V)
-- image: ./icons/paste.png
+- image: ./icons/konsole-paste-ctrl-shift-v.png
+  d200_icon:
+    source: /usr/share/icons/breeze-dark/actions/22/edit-paste.svg
+    text: Einfügen |Ctrl-Shift-V
+    background: '#3a3838'
   icon_source: ./icons/paste.png
   icon_scale: 100
   content_margin: 0

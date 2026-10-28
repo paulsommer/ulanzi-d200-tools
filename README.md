@@ -18,6 +18,7 @@ It is my personal setup (Kubuntu 26.04, Plasma 6, Wayland), shared as it is. The
 |---|---|
 | `d200-key` | sends a key combination such as `ctrl+shift+f1` via `ydotool` (replacement for the `key` action, which needs `xdotool` and does not work on Wayland) |
 | `d200-raise` | program keys: brings the most recently active window of an application to the front (another press cycles through its windows), starts it only if it is not running |
+| `d200-layout-editor`, `layout-editor/` | graphical layout editor (PySide6 in `layout-editor/.venv`): keys with icon, text and function, drag & drop, test on the device |
 | `d200-icon` | renders an SVG icon of an application (from a file or from a JAR), an own PNG/JPG picture and/or a text as a 196×196 key image on black, scaled to fit; needs `librsvg2-bin` |
 | `d200-focus` | service: on every window switch it picks the layout `~/.config/ulanzi/apps/<application>.yaml`, validates it, copies it to `config.yaml` and restarts the daemon |
 | `systemd/d200-focus.service` | user unit for `d200-focus` (starts with the Plasma session) |
@@ -27,8 +28,7 @@ It is my personal setup (Kubuntu 26.04, Plasma 6, Wayland), shared as it is. The
 | `my-layouts/apps/*.yaml` | key layout per application (`default.yaml`, `konsole.yaml`, ...) |
 | `my-layouts/wide-black.yaml` | helper layout: only a black background for the wide display (see "Clock on black") |
 | `my-layouts/icons/*.png` | key images (196×196, `blank-wide.png` 458×196) |
-| `my-layouts/make-icons.sh` | all `d200-icon` calls behind the key images: recreates them (e.g. after changing font or texts) and serves as a template for new keys |
-| `my-layouts/svg/` | own, modified SVG icons used by `make-icons.sh` |
+| `my-layouts/svg/` | own, modified SVG icons used as `d200_icon` sources |
 | `ulanzi-d200-feature-proposals.md` | feature proposals for the author of ulanzi-d200-linux |
 | `ulanzi-d200-issues.md` | GitHub issue texts derived from them: a compact version for first contact, detailed single issues for follow-up questions |
 
@@ -75,7 +75,13 @@ bash install.sh
 sed -i 's/^include-system-site-packages = false/include-system-site-packages = true/' ~/.local/ulanzi/venv/pyvenv.cfg
 
 mkdir -p ~/.local/bin ~/.config/systemd/user/ulanzi-daemon.service.d
-ln -s $T/d200-key $T/d200-raise $T/d200-focus ~/.local/bin/
+ln -s $T/d200-key $T/d200-raise $T/d200-focus $T/d200-layout-editor ~/.local/bin/
+# venv of the layout editor (PySide6, PyYAML)
+python3 -m venv $T/layout-editor/.venv && $T/layout-editor/.venv/bin/pip install -r $T/layout-editor/requirements.txt
+# menu entry and icon of the layout editor
+ln -s $T/layout-editor/d200-layout-editor.desktop ~/.local/share/applications/
+mkdir -p ~/.local/share/icons/hicolor/scalable/apps
+ln -s $T/layout-editor/d200-layout-editor.svg ~/.local/share/icons/hicolor/scalable/apps/
 mkdir -p ~/.local/share/systemd/user
 ln -s $T/systemd/d200-focus.service $T/systemd/d200-wide-black.service ~/.local/share/systemd/user/
 sudo cp $T/udev/99-d200-focus.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules
@@ -97,9 +103,34 @@ the D200 and plug it in again.
   `systemctl --user restart d200-focus`.
 - Broken layouts are rejected and the current one stays active. The error message is in the journal of `d200-focus`.
 - Comments (`#`) and blank lines are allowed and are kept.
+- The layouts in `my-layouts/apps/` are demos. Own layouts there are ignored by Git (`.gitignore`); to keep local
+  changes of the demo layouts out of `git status` too:
+  `git update-index --skip-worktree my-layouts/apps/*.yaml` (undo with `--no-skip-worktree`).
 - The application launcher, KRunner and Plasma dialogs count as windows too and switch to `default`.
 
 A switch takes about 0.4 s (300 ms delay against intermediate Alt+Tab steps, validation, daemon restart).
+
+### Layout editor
+
+`d200-layout-editor` shows the D200 with all keys of a layout. Click a key to edit it on the right:
+
+- **Description:** the comment `# n: ...` in the layout file.
+- **Icon** (SVG, PNG, JPG or `archive.jar!path.svg`, empty = text only) and **text** (`|` = new line): rendered with
+  `d200-icon` while typing.
+- **Background:** colour of the key image (e.g. `#1d3b5a`, colour dialog via `…`), empty = black – useful to tell
+  apart keys with the same icon. Dark colours keep text and icons readable.
+- **Function:** *Empty*, *Key* (`d200-key`), *Program* (`d200-raise`) or *Command*. Commands the editor cannot split up
+  (e.g. two `d200-key` calls joined with `&&`) are shown as *Command* and stay unchanged.
+- **Wide display:** clock or a 458×196 image.
+
+Drag a key onto another one to swap them. The context menu copies a key, also into another layout ("Paste key"), or
+clears it. **Test** sends the current, also unsaved layout to the D200; it stays there until a window of an application
+with a different layout is activated. **New…** and **Copy…** create a layout, suggesting recently active window
+classes from the `d200-focus` journal.
+
+**Save** validates the layout, copies the rendered images to `my-layouts/icons/` and writes the file in the usual
+format (comments and path hints included). An image shared with keys that look different (e.g. `firefox.png` in two
+layouts) is not overwritten; the changed key gets its own file `<layout>-<description>.png`.
 
 ### Keys
 
@@ -145,13 +176,12 @@ therefore use `cmd: ~/.local/bin/d200-raise dolphin`: the name is matched agains
 names (`org.kde.dolphin` → `dolphin`). If the application is running, its most recently active window comes to the
 front (minimized ones are restored); if one of its windows is already active, the next one follows. Only if no window
 exists is the application started – with the name as command, or with `d200-raise <name> <command> [args...]`.
-The start runs in its own systemd scope, because d200-focus restarts the daemon on every window switch and would
-otherwise end the started program along with it.
 
 ### Icons from applications
 
 Many applications ship their toolbar icons as SVG. `d200-icon` draws such an icon on black and optionally writes the
-function name below it (`|` = new line); with `-` instead of an SVG it becomes a text-only key. The text is part of the
+function name below it (`|` = new line); with `-` instead of an SVG it becomes a text-only key, `-b <colour>` sets
+another background colour. The text is part of the
 image because the firmware draws labels in only one font size per layout – set `ShowTitle: false` in the layout.
 Own pictures work too: PNG and JPG are scaled to fit, keeping their aspect ratio.
 JetBrains IDEs keep them in `lib/app-client.jar` under `expui/` (variant `_dark` for the black background), the icons
@@ -166,8 +196,11 @@ unzip -l $J | grep -i 'expui/run/.*_dark.svg'      # find names
 ./d200-icon ~/Pictures/logo.png my-layouts/icons/logo.png "My|Logo"   # own PNG/JPG, scaled to fit
 ```
 
-`my-layouts/make-icons.sh` contains the calls for all existing key images. Add new keys there, too, so all images can
-be recreated with one command.
+Every key image made with `d200-icon` has its source and text in the layout (`d200_icon: {source, text}`), so the
+layout editor can recreate it: **File → Re-render all key images** after changing the layout values in `d200-icon`.
+Not made with `d200-icon`: `media-previous`, `media-playpause`, `media-next`, `ctrl-shift-f1` (rendered by the daemon
+from an `icon_spec`, see "Pitfalls"), the images copied from `ulanzi-d200-linux/icons/`, and the plain black
+`blank.png` / `blank-wide.png`.
 
 ### Clock on black
 

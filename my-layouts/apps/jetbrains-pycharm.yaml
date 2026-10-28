@@ -18,6 +18,9 @@ buttons:
 
 # 0: Find usages
 - image: ./icons/pycharm-usages.png
+  d200_icon:
+    source: ~/apps/pycharm/lib/app-client.jar!actions/findEntireFile_dark.svg  ### <--- change this to your path (your installation)
+    text: Find Usages
   icon_source: ./icons/pycharm-usages.png
   icon_scale: 100
   content_margin: 0
@@ -28,6 +31,9 @@ buttons:
 
 # 1: Go to implementation(s)
 - image: ./icons/pycharm-impl.png
+  d200_icon:
+    source: ~/apps/pycharm/lib/app-client.jar!expui/gutter/implementedMethod_dark.svg  ### <--- change this to your path (your installation)
+    text: Go to Impl.
   icon_source: ./icons/pycharm-impl.png
   icon_scale: 100
   content_margin: 0
@@ -38,6 +44,9 @@ buttons:
 
 # 2: Search everywhere (double Shift)
 - image: ./icons/pycharm-search.png
+  d200_icon:
+    source: ~/apps/pycharm/lib/app-client.jar!expui/general/search_dark.svg  ### <--- change this to your path (your installation)
+    text: Search
   icon_source: ./icons/pycharm-search.png
   icon_scale: 100
   content_margin: 0
@@ -68,6 +77,9 @@ buttons:
 
 # 5: Debug
 - image: ./icons/pycharm-debug.png
+  d200_icon:
+    source: ~/apps/pycharm/lib/app-client.jar!expui/run/debug_dark.svg  ### <--- change this to your path (your installation)
+    text: Debug
   icon_source: ./icons/pycharm-debug.png
   icon_scale: 100
   content_margin: 0
@@ -78,6 +90,9 @@ buttons:
 
 # 6: Step over
 - image: ./icons/pycharm-step-over.png
+  d200_icon:
+    source: ~/apps/pycharm/lib/app-client.jar!expui/run/stepOver_dark.svg  ### <--- change this to your path (your installation)
+    text: Step Over
   icon_source: ./icons/pycharm-step-over.png
   icon_scale: 100
   content_margin: 0
@@ -88,6 +103,9 @@ buttons:
 
 # 7: Step into my code
 - image: ./icons/pycharm-step-into.png
+  d200_icon:
+    source: ./svg/pycharm-step-into-my-code.svg
+    text: Step Into|My Code
   icon_source: ./icons/pycharm-step-into.png
   icon_scale: 100
   content_margin: 0
@@ -98,6 +116,9 @@ buttons:
 
 # 8: Step out
 - image: ./icons/pycharm-step-out.png
+  d200_icon:
+    source: ~/apps/pycharm/lib/app-client.jar!expui/run/stepOut_dark.svg  ### <--- change this to your path (your installation)
+    text: Step Out
   icon_source: ./icons/pycharm-step-out.png
   icon_scale: 100
   content_margin: 0
@@ -118,6 +139,9 @@ buttons:
 
 # 10: Back
 - image: ./icons/pycharm-back.png
+  d200_icon:
+    source: ~/apps/pycharm/lib/app-client.jar!expui/general/left_dark.svg  ### <--- change this to your path (your installation)
+    text: Back
   icon_source: ./icons/pycharm-back.png
   icon_scale: 100
   content_margin: 0
@@ -128,6 +152,9 @@ buttons:
 
 # 11: Forward
 - image: ./icons/pycharm-forward.png
+  d200_icon:
+    source: ~/apps/pycharm/lib/app-client.jar!expui/general/right_dark.svg  ### <--- change this to your path (your installation)
+    text: Forward
   icon_source: ./icons/pycharm-forward.png
   icon_scale: 100
   content_margin: 0
@@ -138,6 +165,9 @@ buttons:
 
 # 12: Resume program
 - image: ./icons/pycharm-resume.png
+  d200_icon:
+    source: ~/apps/pycharm/lib/app-client.jar!expui/run/resume_dark.svg  ### <--- change this to your path (your installation)
+    text: Resume
   icon_source: ./icons/pycharm-resume.png
   icon_scale: 100
   content_margin: 0

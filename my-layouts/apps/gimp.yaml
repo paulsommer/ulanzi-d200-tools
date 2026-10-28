@@ -19,6 +19,9 @@ buttons:
 
 # 0: Undo (d200-key uses scancodes: US "y" is the German Z key)
 - image: ./icons/gimp-undo.png
+  d200_icon:
+    source: /usr/share/gimp/3.0/icons/Default/scalable/apps/edit-undo.svg
+    text: Rückgängig
   icon_source: ./icons/gimp-undo.png
   icon_scale: 100
   content_margin: 0
@@ -29,6 +32,9 @@ buttons:
 
 # 1: Redo (US "z" = German Y key)
 - image: ./icons/gimp-redo.png
+  d200_icon:
+    source: /usr/share/gimp/3.0/icons/Default/scalable/apps/edit-redo.svg
+    text: Wiederholen
   icon_source: ./icons/gimp-redo.png
   icon_scale: 100
   content_margin: 0
@@ -39,6 +45,9 @@ buttons:
 
 # 2: Fit image in window
 - image: ./icons/gimp-zoom-fit.png
+  d200_icon:
+    source: /usr/share/gimp/3.0/icons/Default/scalable/apps/zoom-fit-best.svg
+    text: Bild|einpassen
   icon_source: ./icons/gimp-zoom-fit.png
   icon_scale: 100
   content_margin: 0
@@ -69,6 +78,9 @@ buttons:
 
 # 5: Rectangle select
 - image: ./icons/gimp-rect-select.png
+  d200_icon:
+    source: /usr/share/gimp/3.0/icons/Legacy/scalable/apps/gimp-tool-rect-select.svg
+    text: Rechteck-|auswahl
   icon_source: ./icons/gimp-rect-select.png
   icon_scale: 100
   content_margin: 0
@@ -79,6 +91,9 @@ buttons:
 
 # 6: Select none
 - image: ./icons/gimp-select-none.png
+  d200_icon:
+    source: /usr/share/gimp/3.0/icons/Default/scalable/apps/gimp-selection-none.svg
+    text: Nichts|auswählen
   icon_source: ./icons/gimp-select-none.png
   icon_scale: 100
   content_margin: 0
@@ -89,6 +104,9 @@ buttons:
 
 # 7: Move
 - image: ./icons/gimp-move.png
+  d200_icon:
+    source: /usr/share/gimp/3.0/icons/Legacy/scalable/apps/gimp-tool-move.svg
+    text: Verschieben
   icon_source: ./icons/gimp-move.png
   icon_scale: 100
   content_margin: 0
@@ -99,6 +117,9 @@ buttons:
 
 # 8: Crop
 - image: ./icons/gimp-crop.png
+  d200_icon:
+    source: /usr/share/gimp/3.0/icons/Legacy/scalable/apps/gimp-tool-crop.svg
+    text: Zuschneiden
   icon_source: ./icons/gimp-crop.png
   icon_scale: 100
   content_margin: 0
@@ -119,6 +140,9 @@ buttons:
 
 # 10: Paintbrush
 - image: ./icons/gimp-paintbrush.png
+  d200_icon:
+    source: /usr/share/gimp/3.0/icons/Legacy/scalable/apps/gimp-tool-paintbrush.svg
+    text: Pinsel
   icon_source: ./icons/gimp-paintbrush.png
   icon_scale: 100
   content_margin: 0
@@ -129,6 +153,9 @@ buttons:
 
 # 11: Eraser
 - image: ./icons/gimp-eraser.png
+  d200_icon:
+    source: /usr/share/gimp/3.0/icons/Legacy/scalable/apps/gimp-tool-eraser.svg
+    text: Radierer
   icon_source: ./icons/gimp-eraser.png
   icon_scale: 100
   content_margin: 0
@@ -139,6 +166,9 @@ buttons:
 
 # 12: Text
 - image: ./icons/gimp-text.png
+  d200_icon:
+    source: /usr/share/gimp/3.0/icons/Legacy/scalable/apps/gimp-tool-text.svg
+    text: Text
   icon_source: ./icons/gimp-text.png
   icon_scale: 100
   content_margin: 0

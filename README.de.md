@@ -21,6 +21,7 @@ klein und sollten sich leicht anpassen lassen.
 |---|---|
 | `d200-key` | sendet eine Tastenkombination wie `ctrl+shift+f1` per `ydotool` (Ersatz für die Aktion `key`, die `xdotool` braucht und unter Wayland nicht geht) |
 | `d200-raise` | Programm-Tasten: holt das zuletzt aktive Fenster eines Programms nach vorne (erneuter Druck wechselt reihum durch seine Fenster), startet es nur, wenn es nicht läuft |
+| `d200-layout-editor`, `layout-editor/` | grafischer Layout-Editor (PySide6 in `layout-editor/.venv`): Tasten mit Icon, Text und Funktion, Drag & Drop, Test am Gerät |
 | `d200-icon` | rendert ein SVG-Icon eines Programms (Datei oder aus einer JAR), ein eigenes PNG/JPG-Bild und/oder einen Text als 196×196-Tastenbild auf Schwarz, passend skaliert; braucht `librsvg2-bin` |
 | `d200-focus` | Dienst: wählt beim Fensterwechsel das Layout `~/.config/ulanzi/apps/<programm>.yaml`, prüft es, kopiert es auf `config.yaml` und startet den Daemon neu |
 | `systemd/d200-focus.service` | User-Unit für `d200-focus` (startet mit der Plasma-Sitzung) |
@@ -30,8 +31,7 @@ klein und sollten sich leicht anpassen lassen.
 | `my-layouts/apps/*.yaml` | Tastenbelegung je Programm (`default.yaml`, `konsole.yaml`, ...) |
 | `my-layouts/wide-black.yaml` | Hilfslayout: nur schwarzer Hintergrund für das große Display (siehe „Uhr auf Schwarz“) |
 | `my-layouts/icons/*.png` | Tastenbilder (196×196, `blank-wide.png` 458×196) |
-| `my-layouts/make-icons.sh` | alle `d200-icon`-Aufrufe hinter den Tastenbildern: erzeugt sie neu (z. B. nach Änderung von Schrift oder Texten) und dient als Vorlage für neue Tasten |
-| `my-layouts/svg/` | eigene, abgewandelte SVG-Icons, die `make-icons.sh` verwendet |
+| `my-layouts/svg/` | eigene, abgewandelte SVG-Icons als Quellen für `d200_icon` |
 | `ulanzi-d200-feature-proposals.md` | Vorschläge an den Autor von ulanzi-d200-linux (englisch) |
 | `ulanzi-d200-issues.md` | GitHub-Issue-Texte daraus (englisch): kompakte Variante für den Erstkontakt, ausführliche Einzel-Issues für Rückfragen |
 
@@ -78,7 +78,13 @@ bash install.sh
 sed -i 's/^include-system-site-packages = false/include-system-site-packages = true/' ~/.local/ulanzi/venv/pyvenv.cfg
 
 mkdir -p ~/.local/bin ~/.config/systemd/user/ulanzi-daemon.service.d
-ln -s $T/d200-key $T/d200-raise $T/d200-focus ~/.local/bin/
+ln -s $T/d200-key $T/d200-raise $T/d200-focus $T/d200-layout-editor ~/.local/bin/
+# venv of the layout editor (PySide6, PyYAML)
+python3 -m venv $T/layout-editor/.venv && $T/layout-editor/.venv/bin/pip install -r $T/layout-editor/requirements.txt
+# menu entry and icon of the layout editor
+ln -s $T/layout-editor/d200-layout-editor.desktop ~/.local/share/applications/
+mkdir -p ~/.local/share/icons/hicolor/scalable/apps
+ln -s $T/layout-editor/d200-layout-editor.svg ~/.local/share/icons/hicolor/scalable/apps/
 mkdir -p ~/.local/share/systemd/user
 ln -s $T/systemd/d200-focus.service $T/systemd/d200-wide-black.service ~/.local/share/systemd/user/
 sudo cp $T/udev/99-d200-focus.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules
@@ -100,9 +106,36 @@ einmal ab- und wieder anstecken.
   `systemctl --user restart d200-focus`.
 - Fehlerhafte Layouts werden abgelehnt, das bisherige bleibt aktiv. Die Fehlermeldung steht im Journal von `d200-focus`.
 - Kommentare (`#`) und Leerzeilen sind erlaubt und bleiben erhalten.
+- Die Layouts in `my-layouts/apps/` sind Demos. Eigene Layouts dort ignoriert Git (`.gitignore`); damit auch lokale
+  Änderungen an den Demo-Layouts nicht in `git status` erscheinen:
+  `git update-index --skip-worktree my-layouts/apps/*.yaml` (rückgängig mit `--no-skip-worktree`).
 - Startmenü, KRunner und Plasma-Dialoge zählen auch als Fenster und schalten auf `default`.
 
 Ein Wechsel dauert etwa 0,4 s (300 ms Wartezeit gegen Alt+Tab-Zwischenschritte, Prüfung, Daemon-Neustart).
+
+### Layout-Editor
+
+`d200-layout-editor` zeigt die D200 mit allen Tasten eines Layouts. Ein Klick auf eine Taste öffnet sie rechts zum
+Bearbeiten:
+
+- **Description:** der Kommentar `# n: ...` in der Layout-Datei.
+- **Icon** (SVG, PNG, JPG oder `archiv.jar!pfad.svg`, leer = nur Text) und **Text** (`|` = neue Zeile): werden schon
+  beim Tippen mit `d200-icon` gerendert.
+- **Background:** Farbe des Tastenbilds (z. B. `#1d3b5a`, Farbdialog über `…`), leer = schwarz – praktisch, um
+  Tasten mit gleichem Symbol zu unterscheiden. Dunkle Farben halten Text und Icons lesbar.
+- **Function:** *Empty*, *Key* (`d200-key`), *Program* (`d200-raise`) oder *Command*. Befehle, die der Editor nicht
+  zerlegen kann (z. B. zwei mit `&&` verbundene `d200-key`-Aufrufe), erscheinen als *Command* und bleiben unverändert.
+- **Wide-Display:** Uhr oder ein Bild mit 458×196 Pixeln.
+
+Eine Taste auf eine andere ziehen tauscht beide. Das Kontextmenü kopiert eine Taste, auch in ein anderes Layout
+(„Paste key“), oder leert sie. **Test** schickt das aktuelle, auch ungespeicherte Layout an die D200; es bleibt, bis
+ein Fenster eines Programms mit anderem Layout aktiv wird. **New…** und **Copy…** legen ein Layout an und schlagen
+dafür die zuletzt aktiven Fensterklassen aus dem Journal von `d200-focus` vor.
+
+**Save** prüft das Layout, kopiert die gerenderten Bilder nach `my-layouts/icons/` und schreibt die Datei im gewohnten
+Format (mit Kommentaren und Pfad-Hinweisen). Ein Bild, das sich die Taste mit anders aussehenden Tasten teilt (z. B.
+`firefox.png` in zwei Layouts), wird nicht überschrieben; die geänderte Taste bekommt eine eigene Datei
+`<layout>-<beschreibung>.png`.
 
 ### Tasten
 
@@ -148,13 +181,12 @@ Programm-Tasten nutzen deshalb `cmd: ~/.local/bin/d200-raise dolphin`: Der Name 
 Fensterklasse verglichen (`org.kde.dolphin` → `dolphin`). Läuft das Programm, kommt sein zuletzt aktives Fenster nach
 vorne (minimierte werden wiederhergestellt); ist schon eins seiner Fenster aktiv, folgt das nächste. Nur wenn kein
 Fenster existiert, wird das Programm gestartet – mit dem Namen als Befehl oder mit `d200-raise <name> <befehl> [args...]`.
-Der Start läuft in einem eigenen systemd-Scope, weil d200-focus den Daemon bei jedem Fensterwechsel neu startet und das
-gestartete Programm sonst mit beenden würde.
 
 ### Icons aus Programmen
 
 Viele Programme haben ihre Symbolleisten-Icons als SVG dabei. `d200-icon` zeichnet so ein Icon auf Schwarz und schreibt
-optional den Funktionsnamen darunter (`|` = neue Zeile); mit `-` statt SVG wird es eine reine Text-Taste. Der Text steckt
+optional den Funktionsnamen darunter (`|` = neue Zeile); mit `-` statt SVG wird es eine reine Text-Taste, `-b <farbe>`
+setzt eine andere Hintergrundfarbe. Der Text steckt
 im Bild, weil die Firmware Labels nur mit einer Schriftgröße je Layout zeichnet – im Layout dann `ShowTitle: false`.
 Eigene Bilder gehen auch: PNG und JPG werden passend skaliert, das Seitenverhältnis bleibt erhalten.
 Bei JetBrains-IDEs liegen sie in `lib/app-client.jar` unter `expui/` (Variante `_dark` für den schwarzen Hintergrund),
@@ -169,8 +201,11 @@ unzip -l $J | grep -i 'expui/run/.*_dark.svg'      # find names
 ./d200-icon ~/Bilder/logo.png my-layouts/icons/logo.png "Mein|Logo"   # own PNG/JPG, scaled to fit
 ```
 
-`my-layouts/make-icons.sh` enthält die Aufrufe für alle vorhandenen Tastenbilder. Neue Tasten am besten auch dort
-eintragen, dann lassen sich alle Bilder mit einem Befehl neu erzeugen.
+Jedes mit `d200-icon` erzeugte Tastenbild hat Quelle und Text im Layout (`d200_icon: {source, text}`), der
+Layout-Editor kann es also neu erzeugen: **File → Re-render all key images** nach einer Änderung der Layout-Werte in
+`d200-icon`. Nicht mit `d200-icon` erzeugt: `media-previous`, `media-playpause`, `media-next`, `ctrl-shift-f1` (vom
+Daemon aus einem `icon_spec` gerendert, siehe „Fallstricke“), die aus `ulanzi-d200-linux/icons/` kopierten Bilder und
+die schwarzen `blank.png` / `blank-wide.png`.
 
 ### Uhr auf Schwarz
 

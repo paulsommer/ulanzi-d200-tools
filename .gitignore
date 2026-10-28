@@ -4,3 +4,10 @@ my-layouts/icons/*--background-*.png
 my-layouts/icons/mosaic-*.png
 # local stuff, not published
 nogit_*
+# virtual environments of the layout editor (Linux, Windows, macOS)
+.venv/
+.venv-win/
+.venv-darwin/
+# own layouts: the committed ones are demos; local changes are hidden with
+# git update-index --skip-worktree (see README, "Layouts per application")
+my-layouts/apps/

@@ -3,20 +3,23 @@
 #
 # Many applications ship their toolbar icons as SVG (JetBrains IDEs inside their
 # JAR files, KDE/GTK apps in /usr/share/icons); own pictures can be PNG or JPG.
-# The image is scaled to fit (aspect ratio kept) and drawn on black, with an
-# optional text below it. The text is part of the image because the firmware
+# The image is scaled to fit (aspect ratio kept) and drawn on black or a given
+# background colour, with an optional text below it. The text is part of the image because the firmware
 # draws labels with one font size per layout, too large for long names.
 #
-# Usage:  d200-icon <image | -> <out.png> [text]
+# Usage:  d200-icon [-b <colour>] <image | -> <out.png> [text]
 #         <image> is an SVG, PNG or JPG file, or <archive.jar>!<path/in/archive.svg>;
 #         "-" = text only; "|" in the text starts a new line
+#         -b: background colour (SVG colour, e.g. "#1d3b5a" or navy), default black;
+#             dark colours keep the light text and icons readable
 # Examples:
 #   d200-icon ~/apps/pycharm/lib/app-client.jar!expui/run/resume_dark.svg icons/pycharm-resume.png Resume
 #   d200-icon ~/Bilder/logo.png icons/logo.png "My|Logo"
 #   d200-icon - icons/pycharm-back.png Back
+#   d200-icon -b '#1d3b5a' /usr/share/icons/breeze-dark/actions/22/edit-copy-symbolic.svg icons/copy-shift.png Kopieren
 # Needs rsvg-convert (apt package librsvg2-bin).
 
-VERSION="1.2.0"
+VERSION="1.3.0"
 # Layout values (all in px). Where they are used: search for "### <--- layout".
 button_size=196      # image size, given by the device – do not change
 icon_size=130        ### <--- layout: icon size without text
@@ -29,8 +32,17 @@ font_size=22         ### <--- layout: text size
 line_height=28       ### <--- layout: distance between two text lines
 text_color="#DFE1E5"
 
+usage="Usage: d200-icon [-b <colour>] <svg/png/jpg file | archive.jar!path.svg | -> <out.png> [text]"
+background=black
+while getopts "b:" opt; do
+    case $opt in
+        b) background=$OPTARG ;;
+        *) echo "$usage" >&2; exit 2 ;;
+    esac
+done
+shift $(( OPTIND - 1 ))
 if [ $# -lt 2 ] || [ $# -gt 3 ]; then
-    echo "Usage: d200-icon <svg/png/jpg file | archive.jar!path.svg | -> <out.png> [text]" >&2
+    echo "$usage" >&2
     exit 2
 fi
 text=$3
@@ -86,7 +98,7 @@ fi
 
 rsvg-convert --output="$2" <<EOF
 <svg xmlns="http://www.w3.org/2000/svg" width="$button_size" height="$button_size">
-<rect width="$button_size" height="$button_size" fill="black"/>
+<rect width="$button_size" height="$button_size" fill="$background"/>
 $icon
 <g font-family="$font" font-size="$font_size" fill="$text_color" text-anchor="middle">$lines</g>
 </svg>

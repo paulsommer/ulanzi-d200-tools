@@ -1,0 +1,19 @@
+[Desktop Entry]
+Categories=Utility;
+Comment[de_DE]=Edit the key layouts of the Ulanzi D200
+Comment=Edit the key layouts of the Ulanzi D200
+Exec=d200-layout-editor
+GenericName[de_DE]=Ulanzi D200 key layouts
+GenericName=Ulanzi D200 key layouts
+Icon=d200-layout-editor
+MimeType=
+Name[de_DE]=D200 Layout Editor
+Name=D200 Layout Editor
+Path=
+StartupNotify=true
+StartupWMClass=d200-layout-editor
+Terminal=false
+TerminalOptions=
+Type=Application
+X-KDE-SubstituteUID=false
+X-KDE-Username=
