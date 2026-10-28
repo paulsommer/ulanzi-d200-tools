@@ -7,6 +7,15 @@ Dependencies: bash, ydotool, awk, librsvg2-bin (rsvg-convert), unzip, linux-libc
 No functions. Translates `ctrl+shift+f1` into ydotool key codes (looked up in `/usr/include/linux/input-event-codes.h`,
 aliases ctrl/shift/alt/altgr/super), presses all keys in order and releases them in reverse order.
 
+## d200-raise
+
+| Line | Function | Description |
+|------|----------|-------------|
+| 54 | `ResultReceiver` | D-Bus object on `/` of the process's own (unique-name) connection; the one-shot KWin script calls its `result` method |
+| 58 | `ResultReceiver.__init__` | Registers the object and keeps the main loop to stop |
+| 66 | `ResultReceiver.result` | D-Bus method `io.github.paulsommer.D200Raise.result(b)`: stores whether a window was activated and quits the loop |
+| 77 | `main` | Loads a one-shot KWin script that filters `workspace.stackingOrder` by window class (full or last dot component, like `layout_for` in d200-focus) and activates the topmost match – or the bottommost one if a match is already active (round robin); waits up to 2 s for the callback, unloads the script and starts the command via `systemd-run --user --scope` if no window matched (own scope, so the daemon restart by d200-focus does not kill it) |
+
 ## d200-icon
 
 No functions. Reads an SVG, PNG or JPG file (type by extension), an SVG from `archive.jar!path.svg` (via `unzip -p`), or

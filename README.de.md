@@ -20,6 +20,7 @@ klein und sollten sich leicht anpassen lassen.
 | Datei | Zweck |
 |---|---|
 | `d200-key` | sendet eine Tastenkombination wie `ctrl+shift+f1` per `ydotool` (Ersatz für die Aktion `key`, die `xdotool` braucht und unter Wayland nicht geht) |
+| `d200-raise` | Programm-Tasten: holt das zuletzt aktive Fenster eines Programms nach vorne (erneuter Druck wechselt reihum durch seine Fenster), startet es nur, wenn es nicht läuft |
 | `d200-icon` | rendert ein SVG-Icon eines Programms (Datei oder aus einer JAR), ein eigenes PNG/JPG-Bild und/oder einen Text als 196×196-Tastenbild auf Schwarz, passend skaliert; braucht `librsvg2-bin` |
 | `d200-focus` | Dienst: wählt beim Fensterwechsel das Layout `~/.config/ulanzi/apps/<programm>.yaml`, prüft es, kopiert es auf `config.yaml` und startet den Daemon neu |
 | `systemd/d200-focus.service` | User-Unit für `d200-focus` (startet mit der Plasma-Sitzung) |
@@ -77,7 +78,7 @@ bash install.sh
 sed -i 's/^include-system-site-packages = false/include-system-site-packages = true/' ~/.local/ulanzi/venv/pyvenv.cfg
 
 mkdir -p ~/.local/bin ~/.config/systemd/user/ulanzi-daemon.service.d
-ln -s $T/d200-key $T/d200-focus ~/.local/bin/
+ln -s $T/d200-key $T/d200-raise $T/d200-focus ~/.local/bin/
 mkdir -p ~/.local/share/systemd/user
 ln -s $T/systemd/d200-focus.service $T/systemd/d200-wide-black.service ~/.local/share/systemd/user/
 sudo cp $T/udev/99-d200-focus.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules
@@ -141,6 +142,14 @@ Die Namen sind Scancodes der US-Tastatur, andere Tastaturlayouts bilden sie um: 
 **Z** und umgekehrt (Undo in GIMP ist in meinen Layouts deshalb `ctrl+y`). Bei Sonderzeichen gilt das ebenso.
 
 Weitere Aktionen: `app` (Programm starten, `params: {name: firefox}`), `command` (beliebiger Befehl), `obs`.
+
+`app` und ein einfaches `command` öffnen bei Firefox, Konsole, Dolphin oder Kate mit jedem Druck ein weiteres Fenster.
+Programm-Tasten nutzen deshalb `cmd: ~/.local/bin/d200-raise dolphin`: Der Name wird wie bei den Layout-Namen mit der
+Fensterklasse verglichen (`org.kde.dolphin` → `dolphin`). Läuft das Programm, kommt sein zuletzt aktives Fenster nach
+vorne (minimierte werden wiederhergestellt); ist schon eins seiner Fenster aktiv, folgt das nächste. Nur wenn kein
+Fenster existiert, wird das Programm gestartet – mit dem Namen als Befehl oder mit `d200-raise <name> <befehl> [args...]`.
+Der Start läuft in einem eigenen systemd-Scope, weil d200-focus den Daemon bei jedem Fensterwechsel neu startet und das
+gestartete Programm sonst mit beenden würde.
 
 ### Icons aus Programmen
 

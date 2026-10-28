@@ -17,6 +17,7 @@ It is my personal setup (Kubuntu 26.04, Plasma 6, Wayland), shared as it is. The
 | File | Purpose |
 |---|---|
 | `d200-key` | sends a key combination such as `ctrl+shift+f1` via `ydotool` (replacement for the `key` action, which needs `xdotool` and does not work on Wayland) |
+| `d200-raise` | program keys: brings the most recently active window of an application to the front (another press cycles through its windows), starts it only if it is not running |
 | `d200-icon` | renders an SVG icon of an application (from a file or from a JAR), an own PNG/JPG picture and/or a text as a 196×196 key image on black, scaled to fit; needs `librsvg2-bin` |
 | `d200-focus` | service: on every window switch it picks the layout `~/.config/ulanzi/apps/<application>.yaml`, validates it, copies it to `config.yaml` and restarts the daemon |
 | `systemd/d200-focus.service` | user unit for `d200-focus` (starts with the Plasma session) |
@@ -74,7 +75,7 @@ bash install.sh
 sed -i 's/^include-system-site-packages = false/include-system-site-packages = true/' ~/.local/ulanzi/venv/pyvenv.cfg
 
 mkdir -p ~/.local/bin ~/.config/systemd/user/ulanzi-daemon.service.d
-ln -s $T/d200-key $T/d200-focus ~/.local/bin/
+ln -s $T/d200-key $T/d200-raise $T/d200-focus ~/.local/bin/
 mkdir -p ~/.local/share/systemd/user
 ln -s $T/systemd/d200-focus.service $T/systemd/d200-wide-black.service ~/.local/share/systemd/user/
 sudo cp $T/udev/99-d200-focus.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules
@@ -138,6 +139,14 @@ The names are scancodes of the US keyboard, other keyboard layouts remap them: o
 vice versa (undo in GIMP is therefore `ctrl+y` in my layouts). The same applies to special characters.
 
 Other actions: `app` (launch an application, `params: {name: firefox}`), `command` (any command), `obs`.
+
+`app` and a plain `command` open another window with Firefox, Konsole, Dolphin or Kate on every press. Program keys
+therefore use `cmd: ~/.local/bin/d200-raise dolphin`: the name is matched against the window class like the layout
+names (`org.kde.dolphin` → `dolphin`). If the application is running, its most recently active window comes to the
+front (minimized ones are restored); if one of its windows is already active, the next one follows. Only if no window
+exists is the application started – with the name as command, or with `d200-raise <name> <command> [args...]`.
+The start runs in its own systemd scope, because d200-focus restarts the daemon on every window switch and would
+otherwise end the started program along with it.
 
 ### Icons from applications
 

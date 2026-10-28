@@ -18,9 +18,9 @@ buttons:
   icon_scale: 100
   content_margin: 0
   label: Firefox
-  action: app
+  action: command
   params:
-    name: firefox
+    cmd: ~/.local/bin/d200-raise firefox  ### <--- change this to your path (where d200-raise is linked)
 
 # 1: Konsole
 - image: ./icons/terminal.png
@@ -30,11 +30,17 @@ buttons:
   label: Konsole
   action: command
   params:
-    cmd: konsole
+    cmd: ~/.local/bin/d200-raise konsole  ### <--- change this to your path (where d200-raise is linked)
 
-# 2:
-- enabled: false
-  background_tile: ./icons/blank.png
+# 2: Dolphin
+- image: ./icons/dolphin.png
+  icon_source: ./icons/dolphin.png
+  icon_scale: 100
+  content_margin: 0
+  label: Dolphin
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-raise dolphin  ### <--- change this to your path (where d200-raise is linked)
 
 # 3: previous track
 - image: ./icons/media-previous.png
@@ -56,29 +62,35 @@ buttons:
   params:
     cmd: ~/.local/bin/d200-key nextsong  ### <--- change this to your path (where d200-key is linked)
 
-# 5: Copy (Ctrl+Shift+C)
-- image: ./icons/copy.png
-  icon_source: ./icons/copy.png
+# 5: Thunderbird
+- image: ./icons/thunderbird.png
+  icon_source: ./icons/thunderbird.png
   icon_scale: 100
   content_margin: 0
-  label: Ctrl+Shift+C
+  label: Thunderbird
   action: command
   params:
-    cmd: ~/.local/bin/d200-key ctrl+shift+c  ### <--- change this to your path (where d200-key is linked)
+    cmd: ~/.local/bin/d200-raise thunderbird  ### <--- change this to your path (where d200-raise is linked)
 
-# 6: Paste (Ctrl+Shift+V)
-- image: ./icons/paste.png
-  icon_source: ./icons/paste.png
+# 6: KeePassXC
+- image: ./icons/keepassxc.png
+  icon_source: ./icons/keepassxc.png
   icon_scale: 100
   content_margin: 0
-  label: Ctrl+Shift+V
+  label: KeePassXC
   action: command
   params:
-    cmd: ~/.local/bin/d200-key ctrl+shift+v  ### <--- change this to your path (where d200-key is linked)
+    cmd: ~/.local/bin/d200-raise keepassxc  ### <--- change this to your path (where d200-raise is linked)
 
-# 7:
-- enabled: false
-  background_tile: ./icons/blank.png
+# 7: Kate
+- image: ./icons/kate.png
+  icon_source: ./icons/kate.png
+  icon_scale: 100
+  content_margin: 0
+  label: Kate
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-raise kate  ### <--- change this to your path (where d200-raise is linked)
 
 # 8:
 - enabled: false
@@ -98,13 +110,25 @@ buttons:
 - enabled: false
   background_tile: ./icons/blank.png
 
-# 11:
-- enabled: false
-  background_tile: ./icons/blank.png
+# 11: Copy (Ctrl+Shift+C)
+- image: ./icons/copy.png
+  icon_source: ./icons/copy.png
+  icon_scale: 100
+  content_margin: 0
+  label: Ctrl+Shift+C
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key ctrl+shift+c  ### <--- change this to your path (where d200-key is linked)
 
-# 12:
-- enabled: false
-  background_tile: ./icons/blank.png
+# 12: Paste (Ctrl+Shift+V)
+- image: ./icons/paste.png
+  icon_source: ./icons/paste.png
+  icon_scale: 100
+  content_margin: 0
+  label: Ctrl+Shift+V
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key ctrl+shift+v  ### <--- change this to your path (where d200-key is linked)
 
 # 13:
 - null

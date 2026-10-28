@@ -7,9 +7,10 @@
 # Images that were not made with d200-icon are listed at the end.
 #
 # Usage:  make-icons.sh
-# Needs:  d200-icon (this repository), PyCharm, GIMP 3, KDE Breeze icons, Firefox.
+# Needs:  d200-icon (this repository), PyCharm, GIMP 3, KDE Breeze icons, Firefox,
+#         Dolphin, Thunderbird, KeePassXC, Kate.
 
-VERSION="1.0.0"
+VERSION="1.0.1"
 dir=$(dirname "$(readlink -f "$0")")
 icon="$dir/../d200-icon"
 out="$dir/icons"
@@ -48,6 +49,10 @@ hicolor=/usr/share/icons/hicolor
 "$icon" "$breeze/actions/22/edit-paste.svg"          "$out/paste.png"    "Einfügen"
 "$icon" "$breeze/apps/48/utilities-terminal.svg"     "$out/terminal.png" "Konsole"
 "$icon" "$hicolor/256x256/apps/firefox.png"          "$out/firefox.png"  "Firefox"
+"$icon" "$hicolor/scalable/apps/org.kde.dolphin.svg" "$out/dolphin.png"     "Dolphin"
+"$icon" "$hicolor/256x256/apps/thunderbird.png"      "$out/thunderbird.png" "Thunderbird"
+"$icon" "$hicolor/scalable/apps/keepassxc.svg"       "$out/keepassxc.png"   "KeePassXC"
+"$icon" "$breeze/apps/48/kate.svg"                   "$out/kate.png"        "Kate"
 
 # Not made with d200-icon:
 #   back, camera, custom, keyboard, obs, record, scene, stream, vscode
