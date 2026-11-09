@@ -1,4 +1,3 @@
-brightness: 100
 label_style:
   Align: bottom
   Color: 16777215
@@ -71,9 +70,15 @@ buttons:
   params:
     cmd: ~/.local/bin/d200-key nextsong  ### <--- change this to your path (where d200-key is linked)
 
-# 5:
-- enabled: false
-  background_tile: ./icons/blank.png
+# 5: vdr
+- image: ./icons/konsole-vdr.png
+  d200_icon:
+    source: /home/p-glob/grafik/icons-logos/vdr.svg
+    text: vdr
+  label: ''
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-raise vdr vdr-sxfe  ### <--- change this to your path (where d200-raise is linked)
 
 # 6: Firefox
 - image: ./icons/firefox.png

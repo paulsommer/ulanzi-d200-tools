@@ -8,7 +8,8 @@ not wanted on a key: a running program should only be brought to the front.
 KDE Wayland does not let normal programs list or activate windows, so a one-shot
 KWin script does that and reports back via D-Bus whether a window was found:
 - no window of the program: the command is started
-- a window of the program is active: the next one is activated (round robin)
+- a window of the program is active: it is sent to the back (below all other
+  windows) and the next one is activated (round robin)
 - otherwise: the most recently active window is activated
 
 Usage:  d200-raise <name> [command ...]
@@ -26,14 +27,16 @@ import dbus.mainloop.glib
 import dbus.service
 from gi.repository import GLib
 
-VERSION = "1.0.1"
+VERSION = "1.1.0"
 INTERFACE = "io.github.paulsommer.D200Raise"
 # Time KWin gets to run the script and call back
 TIMEOUT_MS = 2000
 
 # Bottom-to-top stacking order: the last match is the most recently active window.
-# Activating the bottom match while one of them is active cycles through all of them,
-# because the activated window moves to the top.
+# If one of the matches is active, it is lowered below all other windows (it was the
+# "wrong" instance, so it should get out of sight) and the next match below it is
+# activated. Lowered windows end up at the bottom, so this cycles through all matches.
+# slotWindowLower acts on the active window, therefore the target is chosen before.
 KWIN_SCRIPT = """
 var name = "{name}";
 var matches = workspace.stackingOrder.filter(function (w) {{
@@ -41,8 +44,16 @@ var matches = workspace.stackingOrder.filter(function (w) {{
     return w.normalWindow && (cls === name || cls.split(".").pop() === name);
 }});
 var target = null;
-if (matches.length > 0)
-    target = matches.indexOf(workspace.activeWindow) >= 0 ? matches[0] : matches[matches.length - 1];
+if (matches.length > 0) {{
+    var active = matches.indexOf(workspace.activeWindow);
+    if (active < 0) {{
+        target = matches[matches.length - 1];
+    }} else {{
+        target = matches[(active - 1 + matches.length) % matches.length];
+        if (target !== matches[active])
+            workspace.slotWindowLower();
+    }}
+}}
 if (target) {{
     target.minimized = false;
     workspace.activeWindow = target;

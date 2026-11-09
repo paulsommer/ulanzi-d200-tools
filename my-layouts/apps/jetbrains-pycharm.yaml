@@ -2,7 +2,6 @@
 #   row 1:  Find usages | Goto implementation | Search everywhere | prev track | next track
 #   row 2:  Debug | Step over | Step into my code | Step out | play/pause
 #   row 3:  Back | Forward | Resume program
-brightness: 100
 label_style:
   Align: bottom
   Color: 16777215

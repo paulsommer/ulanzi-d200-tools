@@ -16,11 +16,11 @@ It is my personal setup (Kubuntu 26.04, Plasma 6, Wayland), shared as it is. The
 
 | File | Purpose |
 |---|---|
-| `d200-key` | sends a key combination such as `ctrl+shift+f1` via `ydotool` (replacement for the `key` action, which needs `xdotool` and does not work on Wayland) |
-| `d200-raise` | program keys: brings the most recently active window of an application to the front (another press cycles through its windows), starts it only if it is not running |
-| `d200-layout-editor`, `layout-editor/` | graphical layout editor (PySide6 in `layout-editor/.venv`): keys with icon, text and function, drag & drop, test on the device |
-| `d200-icon` | renders an SVG icon of an application (from a file or from a JAR), an own PNG/JPG picture and/or a text as a 196×196 key image on black, scaled to fit; needs `librsvg2-bin` |
-| `d200-focus` | service: on every window switch it picks the layout `~/.config/ulanzi/apps/<application>.yaml`, validates it, copies it to `config.yaml` and restarts the daemon |
+| `d200-key.sh` | sends a key combination such as `ctrl+shift+f1` or a sequence such as `m right up*3 enter` via `ydotool` (replacement for the `key` action, which needs `xdotool` and does not work on Wayland) |
+| `d200-raise.py` | program keys: brings the most recently active window of an application to the front (another press cycles through its windows), starts it only if it is not running |
+| `d200-layout-editor.sh`, `layout-editor/` | graphical layout editor (PySide6 in `layout-editor/.venv`): keys with icon, text and function, drag & drop, test on the device |
+| `d200-icon.sh` | renders an SVG icon of an application (from a file or from a JAR), an own PNG/JPG picture and/or a text as a 196×196 key image on black, scaled to fit; needs `librsvg2-bin` |
+| `d200-focus.py` | service: on every window switch it picks the layout `~/.config/ulanzi/apps/<application>.yaml`, validates it, copies it to `config.yaml` and restarts the daemon; reloads its KWin script when KWin restarts |
 | `systemd/d200-focus.service` | user unit for `d200-focus` (starts with the Plasma session) |
 | `systemd/d200-wide-black.service` | user unit started by udev when the D200 is plugged in; makes `d200-focus` send the black background again |
 | `udev/99-d200-focus.rules` | udev rule, starts `d200-wide-black.service` on plug-in and creates the symlink `/dev/ulanzi-d200` while the D200 is connected |
@@ -75,7 +75,8 @@ bash install.sh
 sed -i 's/^include-system-site-packages = false/include-system-site-packages = true/' ~/.local/ulanzi/venv/pyvenv.cfg
 
 mkdir -p ~/.local/bin ~/.config/systemd/user/ulanzi-daemon.service.d
-ln -s $T/d200-key $T/d200-raise $T/d200-focus $T/d200-layout-editor ~/.local/bin/
+# commands in ~/.local/bin have no extension: d200-key -> d200-key.sh
+for s in d200-key.sh d200-raise.py d200-focus.py d200-layout-editor.sh; do ln -s $T/$s ~/.local/bin/${s%.*}; done
 # venv of the layout editor (PySide6, PyYAML)
 python3 -m venv $T/layout-editor/.venv && $T/layout-editor/.venv/bin/pip install -r $T/layout-editor/requirements.txt
 # menu entry and icon of the layout editor
@@ -110,6 +111,9 @@ the D200 and plug it in again.
 
 A switch takes about 0.4 s (300 ms delay against intermediate Alt+Tab steps, validation, daemon restart).
 
+Besides the window class, the desktop file name reported by KWin is tried as well (full and last dot component),
+for applications whose window class differs from their desktop entry.
+
 ### Layout editor
 
 `d200-layout-editor` shows the D200 with all keys of a layout. Click a key to edit it on the right:
@@ -121,6 +125,11 @@ A switch takes about 0.4 s (300 ms delay against intermediate Alt+Tab steps, val
   apart keys with the same icon. Dark colours keep text and icons readable.
 - **Function:** *Empty*, *Key* (`d200-key`), *Program* (`d200-raise`) or *Command*. Commands the editor cannot split up
   (e.g. two `d200-key` calls joined with `&&`) are shown as *Command* and stay unchanged.
+  *Program* has two fields: the program (command to start it) and the window class. The class is only needed if it
+  differs from the program name, e.g. `vdr` for `vdr-sxfe`; **New…** lists recently active window classes.
+  For *Key*, **● Record** takes the pressed keys as combination or sequence (repeats become `up*3`); click it again
+  to stop. The physical keys are recorded, like `d200-key` sends them. Keys Plasma catches globally (media keys,
+  Meta+…, Ctrl+Alt+T) do not reach the editor and have to be typed in (`previoussong`).
 - **Wide display:** clock or a 458×196 image.
 
 Drag a key onto another one to swap them. The context menu copies a key, also into another layout ("Paste key"), or
@@ -169,12 +178,15 @@ buttons:
 The names are scancodes of the US keyboard, other keyboard layouts remap them: on a German layout `y` gives **Z** and
 vice versa (undo in GIMP is therefore `ctrl+y` in my layouts). The same applies to special characters.
 
+Several arguments form a key sequence, `*n` repeats a combination: `d200-key m right up*3 enter 6` opens a menu in
+VDR and selects an entry in it.
+
 Other actions: `app` (launch an application, `params: {name: firefox}`), `command` (any command), `obs`.
 
 `app` and a plain `command` open another window with Firefox, Konsole, Dolphin or Kate on every press. Program keys
 therefore use `cmd: ~/.local/bin/d200-raise dolphin`: the name is matched against the window class like the layout
 names (`org.kde.dolphin` → `dolphin`). If the application is running, its most recently active window comes to the
-front (minimized ones are restored); if one of its windows is already active, the next one follows. Only if no window
+front (minimized ones are restored); if one of its windows is already active, the next one follows and the previous one is sent to the back. Only if no window
 exists is the application started – with the name as command, or with `d200-raise <name> <command> [args...]`.
 
 ### Icons from applications
@@ -191,9 +203,9 @@ in `/usr/share/icons/breeze-dark/actions/`.
 ```bash
 J=~/apps/pycharm/lib/app-client.jar   ### <--- change this to your path (your PyCharm installation)
 unzip -l $J | grep -i 'expui/run/.*_dark.svg'      # find names
-./d200-icon "$J!expui/run/resume_dark.svg" my-layouts/icons/pycharm-resume.png Resume
-./d200-icon - my-layouts/icons/pycharm-usages.png "Find|Usages"
-./d200-icon ~/Pictures/logo.png my-layouts/icons/logo.png "My|Logo"   # own PNG/JPG, scaled to fit
+./d200-icon.sh "$J!expui/run/resume_dark.svg" my-layouts/icons/pycharm-resume.png Resume
+./d200-icon.sh - my-layouts/icons/pycharm-usages.png "Find|Usages"
+./d200-icon.sh ~/Pictures/logo.png my-layouts/icons/logo.png "My|Logo"   # own PNG/JPG, scaled to fit
 ```
 
 Every key image made with `d200-icon` has its source and text in the layout (`d200_icon: {source, text}`), so the
@@ -201,6 +213,14 @@ layout editor can recreate it: **File → Re-render all key images** after chang
 Not made with `d200-icon`: `media-previous`, `media-playpause`, `media-next`, `ctrl-shift-f1` (rendered by the daemon
 from an `icon_spec`, see "Pitfalls"), the images copied from `ulanzi-d200-linux/icons/`, and the plain black
 `blank.png` / `blank-wide.png`.
+
+### Brightness
+
+The brightness applies to all layouts and is not stored in the layout files. The layout editor has two values
+(**Day**, **Night**) and switches between them with a click. The setting lives in
+`~/.config/d200-focus/brightness.json` and takes effect immediately; the keys reload briefly because the daemon
+restarts. `d200-focus` writes the active value to `config.yaml` on every layout switch and replaces any `brightness:`
+line in a layout.
 
 ### Clock on black
 

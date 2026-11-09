@@ -3,7 +3,6 @@
 #   row 1:  Undo | Redo | Fit image in window | prev track | next track
 #   row 2:  Rect select | Select none | Move | Crop | play/pause
 #   row 3:  Paintbrush | Eraser | Text
-brightness: 100
 label_style:
   Align: bottom
   Color: 16777215
@@ -43,18 +42,18 @@ buttons:
   params:
     cmd: ~/.local/bin/d200-key ctrl+z  ### <--- change this to your path (where d200-key is linked)
 
-# 2: Fit image in window
-- image: ./icons/gimp-zoom-fit.png
+# 2: Crop
+- image: ./icons/gimp-crop.png
   d200_icon:
-    source: /usr/share/gimp/3.0/icons/Default/scalable/apps/zoom-fit-best.svg
-    text: Bild|einpassen
-  icon_source: ./icons/gimp-zoom-fit.png
+    source: /usr/share/gimp/3.0/icons/Legacy/scalable/apps/gimp-tool-crop.svg
+    text: Zuschneiden
+  icon_source: ./icons/gimp-crop.png
   icon_scale: 100
   content_margin: 0
-  label: Shift+Ctrl+J
+  label: Shift+C
   action: command
   params:
-    cmd: ~/.local/bin/d200-key shift+ctrl+j  ### <--- change this to your path (where d200-key is linked)
+    cmd: ~/.local/bin/d200-key shift+c  ### <--- change this to your path (where d200-key is linked)
 
 # 3: previous track
 - image: ./icons/media-previous.png
@@ -115,18 +114,18 @@ buttons:
   params:
     cmd: ~/.local/bin/d200-key m  ### <--- change this to your path (where d200-key is linked)
 
-# 8: Crop
-- image: ./icons/gimp-crop.png
+# 8: Text
+- image: ./icons/gimp-text.png
   d200_icon:
-    source: /usr/share/gimp/3.0/icons/Legacy/scalable/apps/gimp-tool-crop.svg
-    text: Zuschneiden
-  icon_source: ./icons/gimp-crop.png
+    source: /usr/share/gimp/3.0/icons/Legacy/scalable/apps/gimp-tool-text.svg
+    text: Text
+  icon_source: ./icons/gimp-text.png
   icon_scale: 100
   content_margin: 0
-  label: Shift+C
+  label: T
   action: command
   params:
-    cmd: ~/.local/bin/d200-key shift+c  ### <--- change this to your path (where d200-key is linked)
+    cmd: ~/.local/bin/d200-key t  ### <--- change this to your path (where d200-key is linked)
 
 # 9: play/pause
 - image: ./icons/media-playpause.png
@@ -151,7 +150,14 @@ buttons:
   params:
     cmd: ~/.local/bin/d200-key p  ### <--- change this to your path (where d200-key is linked)
 
-# 11: Eraser
+# 11: Pinselgröße
+- image: ./icons/blank.png
+  label: ''
+  action: command
+  params:
+    cmd: ~/.local/bin/d200-key ctrl+alt  ### <--- change this to your path (where d200-key is linked)
+
+# 12: Eraser
 - image: ./icons/gimp-eraser.png
   d200_icon:
     source: /usr/share/gimp/3.0/icons/Legacy/scalable/apps/gimp-tool-eraser.svg
@@ -163,19 +169,6 @@ buttons:
   action: command
   params:
     cmd: ~/.local/bin/d200-key shift+e  ### <--- change this to your path (where d200-key is linked)
-
-# 12: Text
-- image: ./icons/gimp-text.png
-  d200_icon:
-    source: /usr/share/gimp/3.0/icons/Legacy/scalable/apps/gimp-tool-text.svg
-    text: Text
-  icon_source: ./icons/gimp-text.png
-  icon_scale: 100
-  content_margin: 0
-  label: T
-  action: command
-  params:
-    cmd: ~/.local/bin/d200-key t  ### <--- change this to your path (where d200-key is linked)
 
 # 13:
 - null

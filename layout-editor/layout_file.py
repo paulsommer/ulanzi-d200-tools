@@ -19,7 +19,7 @@ DESCRIPTION_RE = re.compile(r"^# (\d+):\s?(.*)$")
 PATH_HINT = "  ### <--- change this to your path (where {} is linked)"
 SOURCE_HINT = "  ### <--- change this to your path (your installation)"
 SCRIPT_RE = re.compile(rf"{re.escape(BIN_DIR)}/(d200-[a-z]+)")
-KEY_RE = re.compile(rf"^{re.escape(BIN_DIR)}/d200-key (\S+)$")
+KEY_RE = re.compile(rf"^{re.escape(BIN_DIR)}/d200-key (.+)$")
 RAISE_RE = re.compile(rf"^{re.escape(BIN_DIR)}/d200-raise (.+)$")
 
 # Function kinds shown in the editor
@@ -49,7 +49,6 @@ def empty_layout(name: str) -> Layout:
     Used for "new layout"; the settings are the same as in all existing layouts.
     """
     data = {
-        "brightness": 100,
         "label_style": {"Align": "bottom", "Color": 0xFFFFFF, "FontName": "Roboto",
                         "ShowTitle": False, "Size": 10, "Weight": 80},
         "obs": {"host": "localhost", "port": 4444, "password": None},
@@ -121,6 +120,15 @@ def save(layout: Layout, path: Path) -> None:
 
 
 # --------------------------------------------------------------------------
+def with_brightness(text: str, level: int) -> str:
+    """Return layout text with the global brightness set, for sending it to the daemon.
+
+    Same as write_layout() in d200-focus; layouts themselves hold no brightness.
+    """
+    return f"brightness: {level}\n" + re.sub(r"^brightness:.*\n", "", text, flags=re.MULTILINE)
+
+
+# --------------------------------------------------------------------------
 def _dump_yaml(value) -> str:
     """Dump a value in block style without line wrapping and trailing newline."""
     return yaml.safe_dump(value, sort_keys=False, allow_unicode=True, width=1000).rstrip("\n")
@@ -163,6 +171,34 @@ def function_of(button: dict | None) -> tuple[str, str]:
         if match := RAISE_RE.match(cmd):
             return RAISE, match[1]
     return COMMAND, cmd
+
+
+# --------------------------------------------------------------------------
+def split_raise(args: str) -> tuple[str, str]:
+    """Split the d200-raise arguments into window class and program for the editor form.
+
+    d200-raise takes "<name> [command ...]" and uses the name as command if none
+    is given. A single word is therefore shown as program with an empty class;
+    "vdr vdr-sxfe" becomes class "vdr" and program "vdr-sxfe".
+
+    Returns:
+        (window_class, program)
+    """
+    first, _, rest = args.strip().partition(" ")
+    return ("", first) if not rest else (first, rest.strip())
+
+
+# --------------------------------------------------------------------------
+def join_raise(window_class: str, program: str) -> str:
+    """Return the d200-raise arguments for window class and program (inverse of split_raise).
+
+    Without class, a program with arguments gets the name of its first word as
+    class; otherwise d200-raise would take the program as class and the first
+    argument as command.
+    """
+    if not window_class and " " in program:
+        window_class = Path(program.split()[0]).name
+    return f"{window_class} {program}".strip() if window_class else program
 
 
 # --------------------------------------------------------------------------

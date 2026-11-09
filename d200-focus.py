@@ -5,19 +5,24 @@ KDE Wayland does not expose the active window to normal programs, so this servic
 loads a tiny KWin script that reports every window activation back via D-Bus.
 For each activation the layout ~/.config/ulanzi/apps/<app>.yaml is looked up
 (falling back to default.yaml), copied to ~/.config/ulanzi/config.yaml and the
-ulanzi-daemon is restarted, which pushes the new buttons to the device.
+ulanzi-daemon is restarted, which pushes the new buttons to the device. The KWin
+script is loaded again whenever KWin (re)appears on the session bus.
 
 The firmware draws its clock (wide display without entry) on the Ulanzi logo. After
 service start, resume and USB plug-in (D-Bus method "prime", called by
 d200-wide-black.service via udev) the helper layout ~/.config/ulanzi/wide-black.yaml is sent
 first, which stores a black background in the device; the real layout follows.
 
+The brightness is global: every layout is written to config.yaml with the active
+value from ~/.config/d200-focus/brightness.json (set in the layout editor).
+
 Runs as systemd user service d200-focus.service.
 """
 
+import json
 import os
+import re
 import signal
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -27,7 +32,7 @@ import dbus.mainloop.glib
 import dbus.service
 from gi.repository import GLib, GLibUnix
 
-VERSION = "1.1.3"
+VERSION = "1.3.1"
 BUS_NAME = "io.github.paulsommer.D200Focus"
 PLUGIN_NAME = "d200-focus"
 ULANZI_DIR = Path.home() / ".config/ulanzi" ### <--- change this to your path (where ~/.config/ulanzi/ is set up)
@@ -38,6 +43,8 @@ CHECK_FILE = ULANZI_DIR / ".d200-focus-check.yaml"
 VALIDATOR = Path.home() / ".local/ulanzi/venv/bin/ulanzi-manager" ### <--- change this to your path (venv of ulanzi-d200-linux install.sh)
 DEFAULT_LAYOUT = "default"
 WIDE_BLACK_FILE = ULANZI_DIR / "wide-black.yaml"
+BRIGHTNESS_FILE = Path.home() / ".config/d200-focus/brightness.json"
+DEFAULT_BRIGHTNESS = 100
 # Wait for focus to settle (e.g. Alt+Tab) before restarting the daemon
 DEBOUNCE_MS = 300
 # Wait for the device to settle after resume or plug-in before sending the black background
@@ -48,7 +55,8 @@ PRIME_DURATION_MS = 1000
 KWIN_SCRIPT = f"""
 function report(window) {{
     if (window)
-        callDBus("{BUS_NAME}", "/", "{BUS_NAME}", "activated", String(window.resourceClass));
+        callDBus("{BUS_NAME}", "/", "{BUS_NAME}", "activated",
+                 String(window.resourceClass), String(window.desktopFileName || ""));
 }}
 workspace.windowActivated.connect(report);
 report(workspace.activeWindow);
@@ -56,24 +64,55 @@ report(workspace.activeWindow);
 
 
 # --------------------------------------------------------------------------
-def layout_for(app_class: str) -> str:
-    """Return the layout name for a window class.
+def layout_for(app_class: str, desktop_file: str = "") -> str:
+    """Return the layout name for a window class or its desktop file.
 
     Wayland window classes are often reverse-DNS app ids (org.kde.konsole),
     so both the full class and its last component are tried. This lets the
-    user simply name the file konsole.yaml.
+    user simply name the file konsole.yaml. The desktop file name is tried
+    afterwards, for apps whose window class differs from their desktop entry.
 
     Args:
         app_class: resourceClass reported by KWin.
+        desktop_file: desktopFileName reported by KWin (may be empty).
 
     Returns:
         Layout name (file name without .yaml).
     """
-    app_class = app_class.lower()
-    for name in (app_class, app_class.rsplit(".", 1)[-1]):
+    candidates = [part for value in (app_class.lower(), desktop_file.lower())
+                  for part in (value, value.rsplit(".", 1)[-1])]
+    for name in candidates:
         if name and (APPS_DIR / f"{name}.yaml").is_file():
             return name
     return DEFAULT_LAYOUT
+
+
+# --------------------------------------------------------------------------
+def current_brightness() -> int:
+    """Return the active brightness (day or night value) chosen in the layout editor.
+
+    Read on every layout switch, so a change in the editor needs no notification.
+    """
+    if not BRIGHTNESS_FILE.is_file():
+        return DEFAULT_BRIGHTNESS
+    settings = json.loads(BRIGHTNESS_FILE.read_text())
+    return settings["night"] if settings["night_mode"] else settings["day"]
+
+
+# --------------------------------------------------------------------------
+def write_layout(source: Path, target: Path) -> None:
+    """Copy a layout and set the global brightness in the copy.
+
+    The daemon falls back to 100 without a value, so it has to be in every file
+    sent to it. A "brightness" line left in a layout is replaced: layouts cannot
+    override the global value.
+
+    Args:
+        source: Layout file.
+        target: File to write (config.yaml or its check copy).
+    """
+    text = re.sub(r"^brightness:.*\n", "", source.read_text(), flags=re.MULTILINE)
+    target.write_text(f"brightness: {current_brightness()}\n{text}")
 
 
 class FocusService(dbus.service.Object):
@@ -90,15 +129,17 @@ class FocusService(dbus.service.Object):
         self.prime_timer_id = None
 
     # --------------------------------------------------------------------------
-    @dbus.service.method(BUS_NAME, in_signature="s")
-    def activated(self, app_class: str):
+    @dbus.service.method(BUS_NAME, in_signature="ss")
+    def activated(self, app_class: str, desktop_file: str):
         """Remember the wanted layout and (re)start the debounce timer.
 
         Args:
             app_class: resourceClass of the newly focused window.
+            desktop_file: desktopFileName of the newly focused window (may be empty).
         """
-        layout = layout_for(app_class)
-        print(f"focus: {app_class} -> {layout}", flush=True)
+        layout = layout_for(app_class, desktop_file)
+        # Format "focus: <class> -> ..." is parsed by layout-editor/new_layout_dialog.py
+        print(f"focus: {app_class} -> {layout} (desktop file: {desktop_file})", flush=True)
         self.pending_layout = layout
         if self.timer_id:
             GLib.source_remove(self.timer_id)
@@ -133,7 +174,7 @@ class FocusService(dbus.service.Object):
     def send_wide_black(self) -> bool:
         """Push the helper layout, then schedule the real layout."""
         self.prime_timer_id = None
-        shutil.copyfile(WIDE_BLACK_FILE, CONFIG_FILE)
+        write_layout(WIDE_BLACK_FILE, CONFIG_FILE)
         subprocess.run(["systemctl", "--user", "restart", "ulanzi-daemon.service"])
         GLib.timeout_add(PRIME_DURATION_MS, self.prime_done)
         return False
@@ -162,7 +203,7 @@ class FocusService(dbus.service.Object):
             if not source.is_file():
                 print(f"missing layout file: {source}", file=sys.stderr, flush=True)
                 return False
-            shutil.copyfile(source, CHECK_FILE)
+            write_layout(source, CHECK_FILE)
             check = subprocess.run([str(VALIDATOR), "validate", str(CHECK_FILE)], capture_output=True, text=True)
             if check.returncode != 0:
                 CHECK_FILE.unlink()
@@ -201,6 +242,28 @@ def unload_kwin_script(bus: dbus.SessionBus) -> None:
 
 
 # --------------------------------------------------------------------------
+def watch_kwin(bus: dbus.SessionBus) -> None:
+    """Load the KWin script now if KWin runs, and again whenever KWin (re)starts.
+
+    A KWin restart (crash, kwin_wayland --replace) drops all loaded scripts,
+    and at login d200-focus may start before KWin is on the bus. Idea taken
+    from Ulanzi-Deck-Linux (crates/ulanzi-deckd/src/focus/kwin.rs).
+    """
+    # --------------------------------------------------------------------------
+    def on_owner_changed(_name: str, _old_owner: str, new_owner: str) -> None:
+        """NameOwnerChanged handler: KWin got a (new) owner on the bus."""
+        if new_owner:
+            print("KWin (re)started, loading focus script", flush=True)
+            load_kwin_script(bus)
+
+    bus.add_signal_receiver(
+        on_owner_changed, signal_name="NameOwnerChanged",
+        dbus_interface="org.freedesktop.DBus", arg0="org.kde.KWin")
+    if bus.name_has_owner("org.kde.KWin"):
+        load_kwin_script(bus)
+
+
+# --------------------------------------------------------------------------
 def main() -> None:
     """Start the D-Bus service, load the KWin script and run until terminated."""
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
@@ -210,7 +273,7 @@ def main() -> None:
     dbus.SystemBus().add_signal_receiver(
         service.on_sleep, signal_name="PrepareForSleep",
         dbus_interface="org.freedesktop.login1.Manager", bus_name="org.freedesktop.login1")
-    load_kwin_script(bus)
+    watch_kwin(bus)
 
     loop = GLib.MainLoop()
     GLibUnix.signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, loop.quit)  # from systemd

@@ -19,11 +19,11 @@ klein und sollten sich leicht anpassen lassen.
 
 | Datei | Zweck |
 |---|---|
-| `d200-key` | sendet eine Tastenkombination wie `ctrl+shift+f1` per `ydotool` (Ersatz für die Aktion `key`, die `xdotool` braucht und unter Wayland nicht geht) |
-| `d200-raise` | Programm-Tasten: holt das zuletzt aktive Fenster eines Programms nach vorne (erneuter Druck wechselt reihum durch seine Fenster), startet es nur, wenn es nicht läuft |
-| `d200-layout-editor`, `layout-editor/` | grafischer Layout-Editor (PySide6 in `layout-editor/.venv`): Tasten mit Icon, Text und Funktion, Drag & Drop, Test am Gerät |
-| `d200-icon` | rendert ein SVG-Icon eines Programms (Datei oder aus einer JAR), ein eigenes PNG/JPG-Bild und/oder einen Text als 196×196-Tastenbild auf Schwarz, passend skaliert; braucht `librsvg2-bin` |
-| `d200-focus` | Dienst: wählt beim Fensterwechsel das Layout `~/.config/ulanzi/apps/<programm>.yaml`, prüft es, kopiert es auf `config.yaml` und startet den Daemon neu |
+| `d200-key.sh` | sendet eine Tastenkombination wie `ctrl+shift+f1` oder eine Tastenfolge wie `m right up*3 enter` per `ydotool` (Ersatz für die Aktion `key`, die `xdotool` braucht und unter Wayland nicht geht) |
+| `d200-raise.py` | Programm-Tasten: holt das zuletzt aktive Fenster eines Programms nach vorne (erneuter Druck wechselt reihum durch seine Fenster), startet es nur, wenn es nicht läuft |
+| `d200-layout-editor.sh`, `layout-editor/` | grafischer Layout-Editor (PySide6 in `layout-editor/.venv`): Tasten mit Icon, Text und Funktion, Drag & Drop, Test am Gerät |
+| `d200-icon.sh` | rendert ein SVG-Icon eines Programms (Datei oder aus einer JAR), ein eigenes PNG/JPG-Bild und/oder einen Text als 196×196-Tastenbild auf Schwarz, passend skaliert; braucht `librsvg2-bin` |
+| `d200-focus.py` | Dienst: wählt beim Fensterwechsel das Layout `~/.config/ulanzi/apps/<programm>.yaml`, prüft es, kopiert es auf `config.yaml` und startet den Daemon neu; lädt sein KWin-Script nach einem KWin-Neustart neu |
 | `systemd/d200-focus.service` | User-Unit für `d200-focus` (startet mit der Plasma-Sitzung) |
 | `systemd/d200-wide-black.service` | User-Unit, von udev beim Einstecken des D200 gestartet; lässt `d200-focus` den schwarzen Hintergrund neu schicken |
 | `udev/99-d200-focus.rules` | udev-Regel, startet beim Einstecken `d200-wide-black.service` und legt den Symlink `/dev/ulanzi-d200` an, solange der D200 angeschlossen ist |
@@ -78,7 +78,8 @@ bash install.sh
 sed -i 's/^include-system-site-packages = false/include-system-site-packages = true/' ~/.local/ulanzi/venv/pyvenv.cfg
 
 mkdir -p ~/.local/bin ~/.config/systemd/user/ulanzi-daemon.service.d
-ln -s $T/d200-key $T/d200-raise $T/d200-focus $T/d200-layout-editor ~/.local/bin/
+# commands in ~/.local/bin have no extension: d200-key -> d200-key.sh
+for s in d200-key.sh d200-raise.py d200-focus.py d200-layout-editor.sh; do ln -s $T/$s ~/.local/bin/${s%.*}; done
 # venv of the layout editor (PySide6, PyYAML)
 python3 -m venv $T/layout-editor/.venv && $T/layout-editor/.venv/bin/pip install -r $T/layout-editor/requirements.txt
 # menu entry and icon of the layout editor
@@ -113,6 +114,9 @@ einmal ab- und wieder anstecken.
 
 Ein Wechsel dauert etwa 0,4 s (300 ms Wartezeit gegen Alt+Tab-Zwischenschritte, Prüfung, Daemon-Neustart).
 
+Neben der Fensterklasse wird auch der von KWin gemeldete Desktop-Dateiname probiert (vollständig und letzter
+Punkt-Bestandteil), für Programme, deren Fensterklasse vom Desktop-Eintrag abweicht.
+
 ### Layout-Editor
 
 `d200-layout-editor` zeigt die D200 mit allen Tasten eines Layouts. Ein Klick auf eine Taste öffnet sie rechts zum
@@ -125,6 +129,12 @@ Bearbeiten:
   Tasten mit gleichem Symbol zu unterscheiden. Dunkle Farben halten Text und Icons lesbar.
 - **Function:** *Empty*, *Key* (`d200-key`), *Program* (`d200-raise`) oder *Command*. Befehle, die der Editor nicht
   zerlegen kann (z. B. zwei mit `&&` verbundene `d200-key`-Aufrufe), erscheinen als *Command* und bleiben unverändert.
+  *Program* hat zwei Felder: das Programm (Startbefehl) und die Fensterklasse. Die Klasse ist nur nötig, wenn sie vom
+  Programmnamen abweicht, z. B. `vdr` bei `vdr-sxfe`; **New…** zeigt zuletzt aktive Fensterklassen.
+  Bei *Key* nimmt **● Record** die gedrückten Tasten als Kombination oder Folge auf (Wiederholungen werden zu `up*3`);
+  erneuter Klick beendet die Aufnahme. Aufgenommen werden die physischen Tasten, so wie `d200-key` sie sendet. Tasten,
+  die Plasma global abfängt (Medientasten, Meta+…, Ctrl+Alt+T), kommen im Editor nicht an und werden eingetippt
+  (`previoussong`).
 - **Wide-Display:** Uhr oder ein Bild mit 458×196 Pixeln.
 
 Eine Taste auf eine andere ziehen tauscht beide. Das Kontextmenü kopiert eine Taste, auch in ein anderes Layout
@@ -174,12 +184,15 @@ buttons:
 Die Namen sind Scancodes der US-Tastatur, andere Tastaturlayouts bilden sie um: Beim deutschen Layout ergibt `y` ein
 **Z** und umgekehrt (Undo in GIMP ist in meinen Layouts deshalb `ctrl+y`). Bei Sonderzeichen gilt das ebenso.
 
+Mehrere Argumente ergeben eine Tastenfolge, `*n` wiederholt eine Kombination: `d200-key m right up*3 enter 6` öffnet
+in VDR ein Menü und wählt darin einen Eintrag.
+
 Weitere Aktionen: `app` (Programm starten, `params: {name: firefox}`), `command` (beliebiger Befehl), `obs`.
 
 `app` und ein einfaches `command` öffnen bei Firefox, Konsole, Dolphin oder Kate mit jedem Druck ein weiteres Fenster.
 Programm-Tasten nutzen deshalb `cmd: ~/.local/bin/d200-raise dolphin`: Der Name wird wie bei den Layout-Namen mit der
 Fensterklasse verglichen (`org.kde.dolphin` → `dolphin`). Läuft das Programm, kommt sein zuletzt aktives Fenster nach
-vorne (minimierte werden wiederhergestellt); ist schon eins seiner Fenster aktiv, folgt das nächste. Nur wenn kein
+vorne (minimierte werden wiederhergestellt); ist schon eins seiner Fenster aktiv, folgt das nächste und das bisherige wandert nach hinten. Nur wenn kein
 Fenster existiert, wird das Programm gestartet – mit dem Namen als Befehl oder mit `d200-raise <name> <befehl> [args...]`.
 
 ### Icons aus Programmen
@@ -196,9 +209,9 @@ KDE-Programmen liegen sie in `/usr/share/icons/breeze-dark/actions/`.
 ```bash
 J=~/apps/pycharm/lib/app-client.jar   ### <--- change this to your path (your PyCharm installation)
 unzip -l $J | grep -i 'expui/run/.*_dark.svg'      # find names
-./d200-icon "$J!expui/run/resume_dark.svg" my-layouts/icons/pycharm-resume.png Resume
-./d200-icon - my-layouts/icons/pycharm-usages.png "Find|Usages"
-./d200-icon ~/Bilder/logo.png my-layouts/icons/logo.png "Mein|Logo"   # own PNG/JPG, scaled to fit
+./d200-icon.sh "$J!expui/run/resume_dark.svg" my-layouts/icons/pycharm-resume.png Resume
+./d200-icon.sh - my-layouts/icons/pycharm-usages.png "Find|Usages"
+./d200-icon.sh ~/Bilder/logo.png my-layouts/icons/logo.png "Mein|Logo"   # own PNG/JPG, scaled to fit
 ```
 
 Jedes mit `d200-icon` erzeugte Tastenbild hat Quelle und Text im Layout (`d200_icon: {source, text}`), der
@@ -206,6 +219,14 @@ Layout-Editor kann es also neu erzeugen: **File → Re-render all key images** n
 `d200-icon`. Nicht mit `d200-icon` erzeugt: `media-previous`, `media-playpause`, `media-next`, `ctrl-shift-f1` (vom
 Daemon aus einem `icon_spec` gerendert, siehe „Fallstricke“), die aus `ulanzi-d200-linux/icons/` kopierten Bilder und
 die schwarzen `blank.png` / `blank-wide.png`.
+
+### Helligkeit
+
+Die Helligkeit gilt für alle Layouts und steht nicht in den Layout-Dateien. Der Layout-Editor hat dafür zwei Werte
+(**Day**, **Night**) und schaltet per Klick zwischen ihnen um. Die Einstellung liegt in
+`~/.config/d200-focus/brightness.json` und wird sofort wirksam; die Tasten laden dabei kurz neu, weil der Daemon
+neu startet. `d200-focus` trägt den aktiven Wert bei jedem Layoutwechsel in `config.yaml` ein, eine Zeile `brightness:`
+in einem Layout wird dabei ersetzt.
 
 ### Uhr auf Schwarz
 

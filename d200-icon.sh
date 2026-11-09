@@ -1,5 +1,5 @@
 #!/bin/bash
-# d200-icon - render an icon or picture into a 196x196 D200 button image.
+# d200-icon.sh - render an icon or picture into a 196x196 D200 button image.
 #
 # Many applications ship their toolbar icons as SVG (JetBrains IDEs inside their
 # JAR files, KDE/GTK apps in /usr/share/icons); own pictures can be PNG or JPG.
@@ -7,16 +7,16 @@
 # background colour, with an optional text below it. The text is part of the image because the firmware
 # draws labels with one font size per layout, too large for long names.
 #
-# Usage:  d200-icon [-b <colour>] <image | -> <out.png> [text]
+# Usage:  d200-icon.sh [-b <colour>] <image | -> <out.png> [text]
 #         <image> is an SVG, PNG or JPG file, or <archive.jar>!<path/in/archive.svg>;
 #         "-" = text only; "|" in the text starts a new line
 #         -b: background colour (SVG colour, e.g. "#1d3b5a" or navy), default black;
 #             dark colours keep the light text and icons readable
 # Examples:
-#   d200-icon ~/apps/pycharm/lib/app-client.jar!expui/run/resume_dark.svg icons/pycharm-resume.png Resume
-#   d200-icon ~/Bilder/logo.png icons/logo.png "My|Logo"
-#   d200-icon - icons/pycharm-back.png Back
-#   d200-icon -b '#1d3b5a' /usr/share/icons/breeze-dark/actions/22/edit-copy-symbolic.svg icons/copy-shift.png Kopieren
+#   d200-icon.sh ~/apps/pycharm/lib/app-client.jar!expui/run/resume_dark.svg icons/pycharm-resume.png Resume
+#   d200-icon.sh ~/Bilder/logo.png icons/logo.png "My|Logo"
+#   d200-icon.sh - icons/pycharm-back.png Back
+#   d200-icon.sh -b '#1d3b5a' /usr/share/icons/breeze-dark/actions/22/edit-copy-symbolic.svg icons/copy-shift.png Kopieren
 # Needs rsvg-convert (apt package librsvg2-bin).
 
 VERSION="1.3.0"
@@ -32,7 +32,7 @@ font_size=22         ### <--- layout: text size
 line_height=28       ### <--- layout: distance between two text lines
 text_color="#DFE1E5"
 
-usage="Usage: d200-icon [-b <colour>] <svg/png/jpg file | archive.jar!path.svg | -> <out.png> [text]"
+usage="Usage: d200-icon.sh [-b <colour>] <svg/png/jpg file | archive.jar!path.svg | -> <out.png> [text]"
 background=black
 while getopts "b:" opt; do
     case $opt in
@@ -61,7 +61,7 @@ if [ "$1" != "-" ]; then
     esac
     # base64 right away: PNG/JPG data contains NUL bytes, which a shell variable cannot hold
     if [[ "$1" == *'!'* ]]; then
-        data=$(set -o pipefail; unzip -p "${1%%!*}" "${1#*!}" | base64 -w0) || { echo "d200-icon: '${1#*!}' not found in '${1%%!*}'" >&2; exit 1; }
+        data=$(set -o pipefail; unzip -p "${1%%!*}" "${1#*!}" | base64 -w0) || { echo "d200-icon.sh: '${1#*!}' not found in '${1%%!*}'" >&2; exit 1; }
     else
         data=$(base64 -w0 "$1") || exit 1
     fi

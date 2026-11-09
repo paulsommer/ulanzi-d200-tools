@@ -75,6 +75,71 @@
      </layout>
     </item>
     <item>
+     <widget class="QGroupBox" name="brightnessGroup">
+      <property name="title">
+       <string>Brightness (all layouts)</string>
+      </property>
+      <layout class="QHBoxLayout" name="brightnessLayout">
+        <item>
+         <widget class="QRadioButton" name="dayRadio">
+          <property name="text">
+           <string>Day</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="dayBrightnessSpin">
+          <property name="toolTip">
+           <string>Key brightness in day mode</string>
+          </property>
+          <property name="keyboardTracking">
+           <bool>false</bool>
+          </property>
+          <property name="suffix">
+           <string> %</string>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="nightRadio">
+          <property name="text">
+           <string>Night</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="nightBrightnessSpin">
+          <property name="toolTip">
+           <string>Key brightness in night mode</string>
+          </property>
+          <property name="keyboardTracking">
+           <bool>false</bool>
+          </property>
+          <property name="suffix">
+           <string> %</string>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="brightnessSpacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+         </spacer>
+        </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
      <layout class="QVBoxLayout" name="contentLayout">
       <item alignment="Qt::AlignmentFlag::AlignHCenter">
        <widget class="QFrame" name="deviceFrame">
@@ -211,7 +276,40 @@
             </widget>
            </item>
            <item row="5" column="1">
-            <widget class="QLineEdit" name="valueEdit"/>
+            <layout class="QHBoxLayout" name="valueRow" stretch="1,2,0">
+             <item>
+              <widget class="QLineEdit" name="classEdit">
+               <property name="placeholderText">
+                <string>class (optional)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="valueEdit"/>
+             </item>
+             <item>
+              <widget class="QToolButton" name="recordButton">
+               <property name="text">
+                <string>Record</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="icon">
+                <iconset>record.svg</iconset>
+               </property>
+               <property name="toolButtonStyle">
+                <enum>Qt::ToolButtonTextBesideIcon</enum>
+               </property>
+               <property name="styleSheet">
+                <string>QToolButton:checked { color: black; background-color: #ff9c9c; border: 1px solid #c04040; border-radius: 3px; padding: 2px 6px; }</string>
+               </property>
+               <property name="toolTip">
+                <string>Record the pressed keys as sequence; click again to stop</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item row="6" column="1">
             <widget class="QLabel" name="valueHint">

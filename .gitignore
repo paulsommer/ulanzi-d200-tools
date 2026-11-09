@@ -11,3 +11,5 @@ nogit_*
 # own layouts: the committed ones are demos; local changes are hidden with
 # git update-index --skip-worktree (see README, "Layouts per application")
 my-layouts/apps/
+# PyCharm project settings
+.idea/
