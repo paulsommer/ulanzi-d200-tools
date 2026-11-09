@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-VERSION = "1.4.1"
+VERSION = "1.4.2"
 
 ULANZI_DIR = Path.home() / ".config/ulanzi"  ### <--- change this to your path (where ~/.config/ulanzi/ is set up)
 APPS_DIR = ULANZI_DIR / "apps"

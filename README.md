@@ -217,7 +217,7 @@ from an `icon_spec`, see "Pitfalls"), the images copied from `ulanzi-d200-linux/
 ### Brightness
 
 The brightness applies to all layouts and is not stored in the layout files. The layout editor has two values
-(**Day**, **Night**) and switches between them with a click. The setting lives in
+(**Day**, **Night**); the button between them (`< day` / `night >`) switches modes. The setting lives in
 `~/.config/d200-focus/brightness.json` and takes effect immediately; the keys reload briefly because the daemon
 restarts. `d200-focus` writes the active value to `config.yaml` on every layout switch and replaces any `brightness:`
 line in a layout.

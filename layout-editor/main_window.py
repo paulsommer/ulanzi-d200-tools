@@ -242,20 +242,27 @@ class MainWindow(QObject):
         settings = load_brightness()
         ui.dayBrightnessSpin.setValue(settings["day"])
         ui.nightBrightnessSpin.setValue(settings["night"])
-        ui.nightRadio.setChecked(settings["night_mode"])
+        ui.nightModeButton.setChecked(settings["night_mode"])
+        self.show_mode(settings["night_mode"])
         self.sent_brightness = self.active_brightness()
         self.brightness_timer = QTimer(singleShot=True, interval=BRIGHTNESS_DELAY_MS)
         self.brightness_timer.timeout.connect(self.send_brightness)
-        ui.nightRadio.toggled.connect(self.brightness_changed)
+        ui.nightModeButton.toggled.connect(self.show_mode)
+        ui.nightModeButton.toggled.connect(self.brightness_changed)
         ui.dayBrightnessSpin.valueChanged.connect(self.brightness_changed)
         ui.nightBrightnessSpin.valueChanged.connect(self.brightness_changed)
 
         self.fill_layout_combo(DEFAULT_LAYOUT)
 
     # --------------------------------------------------------------------------
+    def show_mode(self, night: bool) -> None:
+        """Label the day/night button with the active mode; the arrow points at the spin box in use."""
+        self.ui.nightModeButton.setText("night >" if night else "< day")
+
+    # --------------------------------------------------------------------------
     def active_brightness(self) -> int:
         """Return the brightness value selected by the day/night switch."""
-        spin = self.ui.nightBrightnessSpin if self.ui.nightRadio.isChecked() else self.ui.dayBrightnessSpin
+        spin = self.ui.nightBrightnessSpin if self.ui.nightModeButton.isChecked() else self.ui.dayBrightnessSpin
         return spin.value()
 
     # --------------------------------------------------------------------------
@@ -268,7 +275,7 @@ class MainWindow(QObject):
         BRIGHTNESS_FILE.parent.mkdir(parents=True, exist_ok=True)
         BRIGHTNESS_FILE.write_text(json.dumps({"day": ui.dayBrightnessSpin.value(),
                                                "night": ui.nightBrightnessSpin.value(),
-                                               "night_mode": ui.nightRadio.isChecked()}, indent=2) + "\n")
+                                               "night_mode": ui.nightModeButton.isChecked()}, indent=2) + "\n")
         self.brightness_timer.start()
 
     # --------------------------------------------------------------------------

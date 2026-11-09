@@ -223,7 +223,7 @@ die schwarzen `blank.png` / `blank-wide.png`.
 ### Helligkeit
 
 Die Helligkeit gilt für alle Layouts und steht nicht in den Layout-Dateien. Der Layout-Editor hat dafür zwei Werte
-(**Day**, **Night**) und schaltet per Klick zwischen ihnen um. Die Einstellung liegt in
+(**Day**, **Night**); der Button dazwischen (`< day` / `night >`) schaltet um. Die Einstellung liegt in
 `~/.config/d200-focus/brightness.json` und wird sofort wirksam; die Tasten laden dabei kurz neu, weil der Daemon
 neu startet. `d200-focus` trägt den aktiven Wert bei jedem Layoutwechsel in `config.yaml` ein, eine Zeile `brightness:`
 in einem Layout wird dabei ersetzt.

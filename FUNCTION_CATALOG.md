@@ -99,35 +99,36 @@ No functions. Paths (`~/.config/ulanzi`, `apps/`, `~/.config/d200-focus/brightne
 | 168 | `send_config` | Replaces `config.yaml` and restarts `ulanzi-daemon` (test button, brightness change) |
 | 189 | `MainWindow` | Logic of the window loaded from `main_window.ui` with `QUiLoader` (`KeyWidget` registered as custom widget) |
 | 193 | `MainWindow.__init__` | Loads the UI, connects keys, toolbar, form and menu, sets the brightness controls from the saved settings, opens `default` |
-| 256 | `MainWindow.active_brightness` | Value selected by the day/night switch |
-| 262 | `MainWindow.brightness_changed` | Writes `brightness.json` right away (not part of a layout, so no unsaved-changes flag) and starts the 500 ms timer for `send_brightness` |
-| 275 | `MainWindow.send_brightness` | If the active value changed: sets it in the current `config.yaml` and restarts the daemon, so a layout sent with **Test** stays |
-| 289 | `MainWindow.eventFilter` | Asks about unsaved changes before the window closes; while recording, takes key presses in the value field (also shortcut overrides like Ctrl+Q) |
-| 310 | `MainWindow.record_keys` | ● Record toggled: starts recording (value field cleared, read-only, event filter) or stops and stores the sequence |
-| 330 | `MainWindow.record_key` | Adds a pressed key as `ctrl+shift+c` (name from the scan code, modifier aliases); skips auto-repeat and lone modifiers |
-| 343 | `MainWindow.status` | Status bar message |
-| 348 | `MainWindow.set_dirty` | Unsaved-changes flag, shown as `*` in the window title |
-| 354 | `MainWindow.confirm_discard` | Save / Discard / Cancel question; True if it is fine to continue |
-| 370 | `MainWindow.fill_layout_combo` | Lists `apps/*.yaml` and opens the given layout |
-| 382 | `MainWindow.open_layout` | Loads a layout after `confirm_discard`, refreshes all keys |
-| 398 | `MainWindow.refresh_key` | Shows preview, image or blank tile of a button |
-| 406 | `MainWindow.select` | Marks a key and fills the properties panel (key form or wide display form); stops a running recording first |
-| 439 | `MainWindow.show_value_hint` | Enables and explains the value field for the selected function; shows the class field and the label "Class / Program" for *Program*, the ● Record button for *Key* |
-| 455 | `MainWindow.apply_form` | Builds the selected button from the form on every edit; keeps fields the editor does not show; new keys start with `blank.png` (the validator needs an image) |
-| 498 | `MainWindow.icon_changed` | Stores icon fields and starts the 400 ms render timer |
-| 504 | `MainWindow.render_preview` | Renders the selected key with `d200-icon` into the temporary preview folder (`_preview`) |
-| 522 | `MainWindow.browse_icon` | File dialog for the icon source (SVG/PNG/JPG) |
-| 532 | `MainWindow.choose_background` | Qt colour dialog for the background colour of the selected key (stored as `d200_icon.background`) |
-| 541 | `MainWindow.browse_wide_image` | File dialog for the wide display image |
-| 550 | `MainWindow.swap` | Exchanges two keys and their descriptions (drag & drop) |
-| 561 | `MainWindow.show_key_menu` | Context menu: copy key into the editor clipboard, paste (also in another layout), clear |
-| 589 | `MainWindow.create_layout` | New blank layout or copy of the current one, written right away so `d200-focus` can use it |
-| 614 | `MainWindow.image_in_use` | True if another key (any layout) uses the image with a different `d200_icon`; such shared images are not overwritten |
-| 628 | `MainWindow.new_image_name` | Unused path `./icons/<layout>-<description>.png` |
-| 640 | `MainWindow.save` | Validates (with previews), copies previews to `icons/` (own file for shared or blank images), writes the layout |
-| 663 | `MainWindow.test` | Validates the current layout with previews and sends it with the active brightness via `send_config` |
-| 679 | `MainWindow.render_all` | Renders every image with a `d200_icon` entry in all layouts again (replaces `make-icons.sh`) |
-| 702 | `main` | Creates the QApplication (desktop file name `d200-layout-editor`) and shows the window |
+| 258 | `MainWindow.show_mode` | Labels the day/night button `< day` or `night >`; the arrow points at the spin box in use |
+| 263 | `MainWindow.active_brightness` | Value selected by the day/night button |
+| 269 | `MainWindow.brightness_changed` | Writes `brightness.json` right away (not part of a layout, so no unsaved-changes flag) and starts the 500 ms timer for `send_brightness` |
+| 282 | `MainWindow.send_brightness` | If the active value changed: sets it in the current `config.yaml` and restarts the daemon, so a layout sent with **Test** stays |
+| 296 | `MainWindow.eventFilter` | Asks about unsaved changes before the window closes; while recording, takes key presses in the value field (also shortcut overrides like Ctrl+Q) |
+| 317 | `MainWindow.record_keys` | ● Record toggled: starts recording (value field cleared, read-only, event filter) or stops and stores the sequence |
+| 337 | `MainWindow.record_key` | Adds a pressed key as `ctrl+shift+c` (name from the scan code, modifier aliases); skips auto-repeat and lone modifiers |
+| 350 | `MainWindow.status` | Status bar message |
+| 355 | `MainWindow.set_dirty` | Unsaved-changes flag, shown as `*` in the window title |
+| 361 | `MainWindow.confirm_discard` | Save / Discard / Cancel question; True if it is fine to continue |
+| 377 | `MainWindow.fill_layout_combo` | Lists `apps/*.yaml` and opens the given layout |
+| 389 | `MainWindow.open_layout` | Loads a layout after `confirm_discard`, refreshes all keys |
+| 405 | `MainWindow.refresh_key` | Shows preview, image or blank tile of a button |
+| 413 | `MainWindow.select` | Marks a key and fills the properties panel (key form or wide display form); stops a running recording first |
+| 446 | `MainWindow.show_value_hint` | Enables and explains the value field for the selected function; shows the class field and the label "Class / Program" for *Program*, the ● Record button for *Key* |
+| 462 | `MainWindow.apply_form` | Builds the selected button from the form on every edit; keeps fields the editor does not show; new keys start with `blank.png` (the validator needs an image) |
+| 505 | `MainWindow.icon_changed` | Stores icon fields and starts the 400 ms render timer |
+| 511 | `MainWindow.render_preview` | Renders the selected key with `d200-icon` into the temporary preview folder (`_preview`) |
+| 529 | `MainWindow.browse_icon` | File dialog for the icon source (SVG/PNG/JPG) |
+| 539 | `MainWindow.choose_background` | Qt colour dialog for the background colour of the selected key (stored as `d200_icon.background`) |
+| 548 | `MainWindow.browse_wide_image` | File dialog for the wide display image |
+| 557 | `MainWindow.swap` | Exchanges two keys and their descriptions (drag & drop) |
+| 568 | `MainWindow.show_key_menu` | Context menu: copy key into the editor clipboard, paste (also in another layout), clear |
+| 596 | `MainWindow.create_layout` | New blank layout or copy of the current one, written right away so `d200-focus` can use it |
+| 621 | `MainWindow.image_in_use` | True if another key (any layout) uses the image with a different `d200_icon`; such shared images are not overwritten |
+| 635 | `MainWindow.new_image_name` | Unused path `./icons/<layout>-<description>.png` |
+| 647 | `MainWindow.save` | Validates (with previews), copies previews to `icons/` (own file for shared or blank images), writes the layout |
+| 670 | `MainWindow.test` | Validates the current layout with previews and sends it with the active brightness via `send_config` |
+| 686 | `MainWindow.render_all` | Renders every image with a `d200_icon` entry in all layouts again (replaces `make-icons.sh`) |
+| 709 | `main` | Creates the QApplication (desktop file name `d200-layout-editor`) and shows the window |
 
 ## d200-focus.py
 
