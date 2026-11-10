@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>720</width>
+    <width>715</width>
     <height>720</height>
    </rect>
   </property>
@@ -149,6 +149,78 @@ QPushButton:checked {
          </property>
          <property name="maximum">
           <number>100</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Policy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="dimButton">
+         <property name="toolTip">
+          <string>Dim the D200 now (test); the next key press wakes it up</string>
+         </property>
+         <property name="text">
+          <string>dim</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="dimBrightnessSpin">
+         <property name="toolTip">
+          <string>Key brightness while dimmed</string>
+         </property>
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="suffix">
+          <string> %</string>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="dimAfterLabel">
+         <property name="text">
+          <string>after</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="dimMinutesSpin">
+         <property name="toolTip">
+          <string>Dim after this many minutes without a key press on the D200</string>
+         </property>
+         <property name="keyboardTracking">
+          <bool>false</bool>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>999</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="dimMinutesLabel">
+         <property name="text">
+          <string>min.</string>
          </property>
         </widget>
        </item>
@@ -463,7 +535,7 @@ QPushButton:checked {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>720</width>
+     <width>715</width>
      <height>30</height>
     </rect>
    </property>

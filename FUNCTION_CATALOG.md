@@ -38,7 +38,7 @@ No functions. Bash starter: runs `layout-editor/main_window.py` with the Python 
 ## layout-editor/config.py
 
 No functions. Paths (`~/.config/ulanzi`, `apps/`, `~/.config/d200-focus/brightness.json` with its defaults, real `my-layouts/` folder as base for `./` paths, `d200-icon`,
-`ulanzi-manager`, `~/.local/bin`) and sizes (14 buttons, wide index 13, preview key size).
+`ulanzi-manager`, `~/.local/bin`, D-Bus name of `d200-focus` for the **dim** button) and sizes (14 buttons, wide index 13, preview key size).
 
 ## layout-editor/layout_file.py
 
@@ -94,59 +94,70 @@ No functions. Paths (`~/.config/ulanzi`, `apps/`, `~/.config/d200-focus/brightne
 | 148 | `with_previews` | Copy of a layout that uses the unsaved preview images; for test and validation before saving |
 | 82 | `load_key_names` | Linux key code → name table from `input-event-codes.h`; the recorder uses physical keys like `d200-key` |
 | 98 | `compress_keys` | Recorded combinations → d200-key arguments, repeats as `up*3` |
-| 180 | `set_icon` | Sets the `d200_icon` entry directly after `image`, or removes it |
-| 162 | `load_brightness` | Global brightness settings from `brightness.json`, defaults if the file does not exist |
-| 168 | `send_config` | Replaces `config.yaml` and restarts `ulanzi-daemon` (test button, brightness change) |
-| 189 | `MainWindow` | Logic of the window loaded from `main_window.ui` with `QUiLoader` (`KeyWidget` registered as custom widget) |
-| 193 | `MainWindow.__init__` | Loads the UI, connects keys, toolbar, form and menu, sets the brightness controls from the saved settings, opens `default` |
-| 258 | `MainWindow.show_mode` | Labels the day/night button `< day` or `night >`; the arrow points at the spin box in use |
-| 263 | `MainWindow.active_brightness` | Value selected by the day/night button |
-| 269 | `MainWindow.brightness_changed` | Writes `brightness.json` right away (not part of a layout, so no unsaved-changes flag) and starts the 500 ms timer for `send_brightness` |
-| 282 | `MainWindow.send_brightness` | If the active value changed: sets it in the current `config.yaml` and restarts the daemon, so a layout sent with **Test** stays |
-| 296 | `MainWindow.eventFilter` | Asks about unsaved changes before the window closes; while recording, takes key presses in the value field (also shortcut overrides like Ctrl+Q) |
-| 317 | `MainWindow.record_keys` | ● Record toggled: starts recording (value field cleared, read-only, event filter) or stops and stores the sequence |
-| 337 | `MainWindow.record_key` | Adds a pressed key as `ctrl+shift+c` (name from the scan code, modifier aliases); skips auto-repeat and lone modifiers |
-| 350 | `MainWindow.status` | Status bar message |
-| 355 | `MainWindow.set_dirty` | Unsaved-changes flag, shown as `*` in the window title |
-| 361 | `MainWindow.confirm_discard` | Save / Discard / Cancel question; True if it is fine to continue |
-| 377 | `MainWindow.fill_layout_combo` | Lists `apps/*.yaml` and opens the given layout |
-| 389 | `MainWindow.open_layout` | Loads a layout after `confirm_discard`, refreshes all keys |
-| 405 | `MainWindow.refresh_key` | Shows preview, image or blank tile of a button |
-| 413 | `MainWindow.select` | Marks a key and fills the properties panel (key form or wide display form); stops a running recording first |
-| 446 | `MainWindow.show_value_hint` | Enables and explains the value field for the selected function; shows the class field and the label "Class / Program" for *Program*, the ● Record button for *Key* |
-| 462 | `MainWindow.apply_form` | Builds the selected button from the form on every edit; keeps fields the editor does not show; new keys start with `blank.png` (the validator needs an image) |
-| 505 | `MainWindow.icon_changed` | Stores icon fields and starts the 400 ms render timer |
-| 511 | `MainWindow.render_preview` | Renders the selected key with `d200-icon` into the temporary preview folder (`_preview`) |
-| 529 | `MainWindow.browse_icon` | File dialog for the icon source (SVG/PNG/JPG) |
-| 539 | `MainWindow.choose_background` | Qt colour dialog for the background colour of the selected key (stored as `d200_icon.background`) |
-| 548 | `MainWindow.browse_wide_image` | File dialog for the wide display image |
-| 557 | `MainWindow.swap` | Exchanges two keys and their descriptions (drag & drop) |
-| 568 | `MainWindow.show_key_menu` | Context menu: copy key into the editor clipboard, paste (also in another layout), clear |
-| 596 | `MainWindow.create_layout` | New blank layout or copy of the current one, written right away so `d200-focus` can use it |
-| 621 | `MainWindow.image_in_use` | True if another key (any layout) uses the image with a different `d200_icon`; such shared images are not overwritten |
-| 635 | `MainWindow.new_image_name` | Unused path `./icons/<layout>-<description>.png` |
-| 647 | `MainWindow.save` | Validates (with previews), copies previews to `icons/` (own file for shared or blank images), writes the layout |
-| 670 | `MainWindow.test` | Validates the current layout with previews and sends it with the active brightness via `send_config` |
-| 686 | `MainWindow.render_all` | Renders every image with a `d200_icon` entry in all layouts again (replaces `make-icons.sh`) |
-| 709 | `main` | Creates the QApplication (desktop file name `d200-layout-editor`) and shows the window |
+| 195 | `set_icon` | Sets the `d200_icon` entry directly after `image`, or removes it |
+| 162 | `load_brightness` | Global brightness and dim settings from `brightness.json`, defaults if the file does not exist or a key is missing |
+| 173 | `send_config` | Replaces `config.yaml` and restarts `ulanzi-daemon` (test button) |
+| 184 | `call_focus` | Calls a D-Bus method of `d200-focus` (`dim`, `wake`) via `busctl`, returns the error text or `""`; d200-focus keeps the dimmed state, so it alone sets the brightness in `config.yaml` |
+| 204 | `MainWindow` | Logic of the window loaded from `main_window.ui` with `QUiLoader` (`KeyWidget` registered as custom widget) |
+| 208 | `MainWindow.__init__` | Loads the UI, connects keys, toolbar, form and menu, sets the brightness controls from the saved settings, opens `default` |
+| 278 | `MainWindow.show_mode` | Labels the day/night button `< day` or `night >`; the arrow points at the spin box in use |
+| 283 | `MainWindow.active_brightness` | Value selected by the day/night button |
+| 289 | `MainWindow.brightness_changed` | Writes `brightness.json` (day, night, mode, dim value, dim minutes) right away (not part of a layout, so no unsaved-changes flag) and starts the 500 ms timer for `send_brightness` |
+| 304 | `MainWindow.send_brightness` | If the active value changed: calls `wake` of `d200-focus`, which sets it in the current `config.yaml` (a layout sent with **Test** stays), ends a dimmed state and restarts the idle timer |
+| 321 | `MainWindow.dim` | Test button **dim**: calls the D-Bus method `dim` of `d200-focus` via `busctl`; d200-focus keeps the dimmed state until the next key press |
+| 334 | `MainWindow.eventFilter` | Asks about unsaved changes before the window closes; while recording, takes key presses in the value field (also shortcut overrides like Ctrl+Q) |
+| 355 | `MainWindow.record_keys` | ● Record toggled: starts recording (value field cleared, read-only, event filter) or stops and stores the sequence |
+| 375 | `MainWindow.record_key` | Adds a pressed key as `ctrl+shift+c` (name from the scan code, modifier aliases); skips auto-repeat and lone modifiers |
+| 388 | `MainWindow.status` | Status bar message |
+| 393 | `MainWindow.set_dirty` | Unsaved-changes flag, shown as `*` in the window title |
+| 399 | `MainWindow.confirm_discard` | Save / Discard / Cancel question; True if it is fine to continue |
+| 415 | `MainWindow.fill_layout_combo` | Lists `apps/*.yaml` and opens the given layout |
+| 427 | `MainWindow.open_layout` | Loads a layout after `confirm_discard`, refreshes all keys |
+| 443 | `MainWindow.refresh_key` | Shows preview, image or blank tile of a button |
+| 451 | `MainWindow.select` | Marks a key and fills the properties panel (key form or wide display form); stops a running recording first |
+| 484 | `MainWindow.show_value_hint` | Enables and explains the value field for the selected function; shows the class field and the label "Class / Program" for *Program*, the ● Record button for *Key* |
+| 500 | `MainWindow.apply_form` | Builds the selected button from the form on every edit; keeps fields the editor does not show; new keys start with `blank.png` (the validator needs an image) |
+| 543 | `MainWindow.icon_changed` | Stores icon fields and starts the 400 ms render timer |
+| 549 | `MainWindow.render_preview` | Renders the selected key with `d200-icon` into the temporary preview folder (`_preview`) |
+| 567 | `MainWindow.browse_icon` | File dialog for the icon source (SVG/PNG/JPG) |
+| 577 | `MainWindow.choose_background` | Qt colour dialog for the background colour of the selected key (stored as `d200_icon.background`) |
+| 586 | `MainWindow.browse_wide_image` | File dialog for the wide display image |
+| 595 | `MainWindow.swap` | Exchanges two keys and their descriptions (drag & drop) |
+| 606 | `MainWindow.show_key_menu` | Context menu: copy key into the editor clipboard, paste (also in another layout), clear |
+| 634 | `MainWindow.create_layout` | New blank layout or copy of the current one, written right away so `d200-focus` can use it |
+| 659 | `MainWindow.image_in_use` | True if another key (any layout) uses the image with a different `d200_icon`; such shared images are not overwritten |
+| 673 | `MainWindow.new_image_name` | Unused path `./icons/<layout>-<description>.png` |
+| 685 | `MainWindow.save` | Validates (with previews), copies previews to `icons/` (own file for shared or blank images), writes the layout |
+| 708 | `MainWindow.test` | Validates the current layout with previews and sends it with the active brightness via `send_config` |
+| 724 | `MainWindow.render_all` | Renders every image with a `d200_icon` entry in all layouts again (replaces `make-icons.sh`) |
+| 747 | `main` | Creates the QApplication (desktop file name `d200-layout-editor`) and shows the window |
 
 ## d200-focus.py
 
 | Line | Function | Description |
 |------|----------|-------------|
-| 67 | `layout_for` | Maps a window to a layout name: tries the full window class, its last dot component (`org.kde.konsole` → `konsole`), then the KWin desktop file name and its last component in `~/.config/ulanzi/apps/`, else `default` |
-| 91 | `current_brightness` | Active brightness (day or night value) from `~/.config/d200-focus/brightness.json`, 100 without the file; read on every layout switch |
-| 103 | `write_layout` | Copies a layout and sets the global brightness in the copy (replaces a leftover `brightness:` line) |
-| 118 | `FocusService` | D-Bus object `io.github.paulsommer.D200Focus` on the session bus, called by the KWin script and by `d200-wide-black.service` |
-| 122 | `FocusService.__init__` | Registers the bus name and object path `/` |
-| 133 | `FocusService.activated` | D-Bus method `activated(ss)` (window class, desktop file name) called on every window activation; stores the wanted layout and restarts the 300 ms debounce timer; logs `focus: <class> -> <layout> ...` (parsed by the layout editor) |
-| 150 | `FocusService.prime` | D-Bus method (start, resume, USB plug-in): holds back layout switches and sends the black wide display background after 2 s, so the firmware clock is not drawn on the Ulanzi logo |
-| 164 | `FocusService.on_sleep` | logind `PrepareForSleep` handler on the system bus; calls `prime` after resume |
-| 174 | `FocusService.send_wide_black` | Copies `~/.config/ulanzi/wide-black.yaml` (link to `my-layouts/`) to config.yaml with `write_layout`, restarts ulanzi-daemon and schedules `prime_done` after 1 s |
-| 183 | `FocusService.prime_done` | Ends priming and applies the pending layout again |
-| 190 | `FocusService.apply` | If the layout changed (and no priming is running): validates it with `ulanzi-manager validate` (copy next to config.yaml so `./icons/` resolves), rejects broken layouts with a log message, otherwise replaces config.yaml and restarts ulanzi-daemon |
-| 221 | `load_kwin_script` | Writes the KWin script (reports `resourceClass` and `desktopFileName` of `workspace.windowActivated` via `callDBus`) to `$XDG_RUNTIME_DIR` and loads it, unloading a leftover instance first |
-| 238 | `unload_kwin_script` | Unloads the KWin script when the service stops |
-| 245 | `watch_kwin` | Loads the KWin script if `org.kde.KWin` is on the bus and again on every `NameOwnerChanged` with a new owner (KWin restart, KWin starting after d200-focus); idea from Ulanzi-Deck-Linux `focus/kwin.rs` |
-| 253 | `watch_kwin.on_owner_changed` | Signal handler: loads the script when KWin got a new owner |
-| 267 | `main` | Sets up the GLib D-Bus main loop, primes the wide display, subscribes to logind `PrepareForSleep`, starts `watch_kwin`, quits on SIGTERM/SIGINT |
+| 77 | `layout_for` | Maps a window to a layout name: tries the full window class, its last dot component (`org.kde.konsole` → `konsole`), then the KWin desktop file name and its last component in `~/.config/ulanzi/apps/`, else `default` |
+| 101 | `load_settings` | Brightness and dim settings from `~/.config/d200-focus/brightness.json`, defaults for a missing file or key; read whenever needed, so editor changes need no notification |
+| 113 | `write_layout` | Copies a layout and sets the given brightness in the copy (replaces a leftover `brightness:` line) |
+| 129 | `FocusService` | D-Bus object `io.github.paulsommer.D200Focus` on the session bus, called by the KWin script and by `d200-wide-black.service` |
+| 133 | `FocusService.__init__` | Registers the bus name and object path `/`, starts the idle timer |
+| 146 | `FocusService.brightness` | Brightness to send: dim value while dimmed, else day or night value |
+| 155 | `FocusService.activated` | D-Bus method `activated(ss)` (window class, desktop file name) called on every window activation; stores the wanted layout and restarts the 300 ms debounce timer; logs `focus: <class> -> <layout> ...` (parsed by the layout editor) |
+| 172 | `FocusService.prime` | D-Bus method (start, resume, USB plug-in): holds back layout switches and sends the black wide display background after 2 s, so the firmware clock is not drawn on the Ulanzi logo |
+| 187 | `FocusService.dim` | D-Bus method (idle timer, editor test button): dims the D200 to the dim value until the next key press; sent even when already dimmed (Test may have sent a brighter config) |
+| 200 | `FocusService.wake` | D-Bus method (key press while dimmed, editor brightness change): sends the day/night brightness again and restarts the idle timer |
+| 212 | `FocusService.key_pressed` | Key press from the daemon's journal: calls `wake` if dimmed (the key still runs its action), else restarts the idle timer |
+| 220 | `FocusService.restart_idle_timer` | (Re)starts the timer that calls `idle` after `dim_minutes` without a key press |
+| 227 | `FocusService.idle` | Idle timer expired: calls `dim` |
+| 234 | `FocusService.send_brightness` | Rewrites the current `config.yaml` with the brightness of the current state and restarts the daemon (keeps a layout sent with **Test**); skipped while priming |
+| 248 | `FocusService.on_sleep` | logind `PrepareForSleep` handler on the system bus; calls `prime` after resume |
+| 258 | `FocusService.send_wide_black` | Copies `~/.config/ulanzi/wide-black.yaml` (link to `my-layouts/`) to config.yaml with `write_layout`, restarts ulanzi-daemon and schedules `prime_done` after 1 s |
+| 267 | `FocusService.prime_done` | Ends priming and applies the pending layout again |
+| 274 | `FocusService.apply` | If the layout changed (and no priming is running): validates it with `ulanzi-manager validate` (copy next to config.yaml so `./icons/` resolves), rejects broken layouts with a log message, otherwise replaces config.yaml and restarts ulanzi-daemon |
+| 305 | `load_kwin_script` | Writes the KWin script (reports `resourceClass` and `desktopFileName` of `workspace.windowActivated` via `callDBus`) to `$XDG_RUNTIME_DIR` and loads it, unloading a leftover instance first |
+| 322 | `unload_kwin_script` | Unloads the KWin script when the service stops |
+| 329 | `watch_kwin` | Loads the KWin script if `org.kde.KWin` is on the bus and again on every `NameOwnerChanged` with a new owner (KWin restart, KWin starting after d200-focus); idea from Ulanzi-Deck-Linux `focus/kwin.rs` |
+| 337 | `watch_kwin.on_owner_changed` | Signal handler: loads the script when KWin got a new owner |
+| 351 | `watch_key_presses` | Follows `journalctl --user -u ulanzi-daemon -f` and calls `key_pressed` for every `Button N pressed` line (all keys incl. wide display; the daemon has no other interface for key events) |
+| 367 | `watch_key_presses.on_output` | Reads journal output from the pipe, keeps an incomplete last line for the next chunk |
+| 384 | `main` | Sets up the GLib D-Bus main loop, primes the wide display, subscribes to logind `PrepareForSleep`, starts `watch_kwin` and `watch_key_presses`, quits on SIGTERM/SIGINT |

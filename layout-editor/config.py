@@ -2,14 +2,17 @@
 
 from pathlib import Path
 
-VERSION = "1.4.2"
+VERSION = "1.5.0"
 
 ULANZI_DIR = Path.home() / ".config/ulanzi"  ### <--- change this to your path (where ~/.config/ulanzi/ is set up)
 APPS_DIR = ULANZI_DIR / "apps"
 CONFIG_FILE = ULANZI_DIR / "config.yaml"
 # Global brightness of all layouts, read by d200-focus on every layout switch
 BRIGHTNESS_FILE = Path.home() / ".config/d200-focus/brightness.json"
-DEFAULT_BRIGHTNESS = {"day": 100, "night": 30, "night_mode": False}
+# Also the dim settings: d200-focus dims to "dim" after "dim_minutes" without a key press
+DEFAULT_BRIGHTNESS = {"day": 100, "night": 30, "night_mode": False, "dim": 1, "dim_minutes": 10}
+# D-Bus name of d200-focus, for the "dim" test button and brightness changes ("wake")
+FOCUS_BUS_NAME = "io.github.paulsommer.D200Focus"
 # Must live next to config.yaml so that relative image paths (./icons/...) resolve
 TEST_FILE = ULANZI_DIR / ".d200-layout-test.yaml"
 # Relative paths in layouts (./icons/..., ./svg/...) are resolved against the

@@ -16,6 +16,13 @@ first, which stores a black background in the device; the real layout follows.
 The brightness is global: every layout is written to config.yaml with the active
 value from ~/.config/d200-focus/brightness.json (set in the layout editor).
 
+Dimming: the daemon logs every key press (also of the wide display) in the journal,
+which is followed here. Without a key press for "dim_minutes" the D200 is dimmed to
+"dim" (D-Bus method "dim", also used by the editor's test button); the next key press
+wakes it again (D-Bus method "wake"). That key still runs its action. Only this service
+sets the brightness in config.yaml: the editor calls "wake" when the brightness changes,
+otherwise the dimmed state kept here and the device would drift apart.
+
 Runs as systemd user service d200-focus.service.
 """
 
@@ -32,7 +39,7 @@ import dbus.mainloop.glib
 import dbus.service
 from gi.repository import GLib, GLibUnix
 
-VERSION = "1.3.1"
+VERSION = "1.4.0"
 BUS_NAME = "io.github.paulsommer.D200Focus"
 PLUGIN_NAME = "d200-focus"
 ULANZI_DIR = Path.home() / ".config/ulanzi" ### <--- change this to your path (where ~/.config/ulanzi/ is set up)
@@ -44,7 +51,10 @@ VALIDATOR = Path.home() / ".local/ulanzi/venv/bin/ulanzi-manager" ### <--- chang
 DEFAULT_LAYOUT = "default"
 WIDE_BLACK_FILE = ULANZI_DIR / "wide-black.yaml"
 BRIGHTNESS_FILE = Path.home() / ".config/d200-focus/brightness.json"
-DEFAULT_BRIGHTNESS = 100
+# Same defaults as the layout editor (layout-editor/config.py)
+DEFAULT_SETTINGS = {"day": 100, "night": 30, "night_mode": False, "dim": 1, "dim_minutes": 10}
+# Log line of ulanzi-daemon for a key press, e.g. "... - INFO - Button 13 pressed (state=200)"
+KEY_PRESS = re.compile(rb" - Button \d+ pressed ")
 # Wait for focus to settle (e.g. Alt+Tab) before restarting the daemon
 DEBOUNCE_MS = 300
 # Wait for the device to settle after resume or plug-in before sending the black background
@@ -88,19 +98,19 @@ def layout_for(app_class: str, desktop_file: str = "") -> str:
 
 
 # --------------------------------------------------------------------------
-def current_brightness() -> int:
-    """Return the active brightness (day or night value) chosen in the layout editor.
+def load_settings() -> dict:
+    """Return the brightness and dim settings chosen in the layout editor.
 
-    Read on every layout switch, so a change in the editor needs no notification.
+    Read whenever they are needed, so a change in the editor needs no notification.
+    Keys missing in an older file are taken from the defaults.
     """
     if not BRIGHTNESS_FILE.is_file():
-        return DEFAULT_BRIGHTNESS
-    settings = json.loads(BRIGHTNESS_FILE.read_text())
-    return settings["night"] if settings["night_mode"] else settings["day"]
+        return DEFAULT_SETTINGS
+    return {**DEFAULT_SETTINGS, **json.loads(BRIGHTNESS_FILE.read_text())}
 
 
 # --------------------------------------------------------------------------
-def write_layout(source: Path, target: Path) -> None:
+def write_layout(source: Path, target: Path, brightness: int) -> None:
     """Copy a layout and set the global brightness in the copy.
 
     The daemon falls back to 100 without a value, so it has to be in every file
@@ -110,9 +120,10 @@ def write_layout(source: Path, target: Path) -> None:
     Args:
         source: Layout file.
         target: File to write (config.yaml or its check copy).
+        brightness: Value to write (day/night or dim value).
     """
     text = re.sub(r"^brightness:.*\n", "", source.read_text(), flags=re.MULTILINE)
-    target.write_text(f"brightness: {current_brightness()}\n{text}")
+    target.write_text(f"brightness: {brightness}\n{text}")
 
 
 class FocusService(dbus.service.Object):
@@ -127,6 +138,17 @@ class FocusService(dbus.service.Object):
         self.timer_id = None
         self.priming = False
         self.prime_timer_id = None
+        self.dimmed = False
+        self.idle_timer_id = None
+        self.restart_idle_timer()
+
+    # --------------------------------------------------------------------------
+    def brightness(self) -> int:
+        """Return the brightness to send: the dim value while dimmed, else day or night."""
+        settings = load_settings()
+        if self.dimmed:
+            return settings["dim"]
+        return settings["night"] if settings["night_mode"] else settings["day"]
 
     # --------------------------------------------------------------------------
     @dbus.service.method(BUS_NAME, in_signature="ss")
@@ -161,6 +183,68 @@ class FocusService(dbus.service.Object):
         self.prime_timer_id = GLib.timeout_add(PRIME_DELAY_MS, self.send_wide_black)
 
     # --------------------------------------------------------------------------
+    @dbus.service.method(BUS_NAME, in_signature="")
+    def dim(self):
+        """Dim the D200 until the next key press.
+
+        Called by the idle timer and by the "dim" button of the layout editor. Sent
+        even when already dimmed: the editor's test button may have sent a brighter
+        config.yaml meanwhile.
+        """
+        print("dim", flush=True)
+        self.dimmed = True
+        self.send_brightness()
+
+    # --------------------------------------------------------------------------
+    @dbus.service.method(BUS_NAME, in_signature="")
+    def wake(self):
+        """Send the day/night brightness again and restart the idle timer.
+
+        Called on a key press while dimmed and by the layout editor whenever the
+        brightness changes, so the dimmed state here always matches the device.
+        """
+        print("wake", flush=True)
+        self.dimmed = False
+        self.restart_idle_timer()
+        self.send_brightness()
+
+    # --------------------------------------------------------------------------
+    def key_pressed(self) -> None:
+        """Key press on the D200 (from the daemon's journal): wake up or restart the idle timer."""
+        if self.dimmed:
+            self.wake()
+        else:
+            self.restart_idle_timer()
+
+    # --------------------------------------------------------------------------
+    def restart_idle_timer(self) -> None:
+        """(Re)start the timer that dims the D200 after "dim_minutes" without a key press."""
+        if self.idle_timer_id:
+            GLib.source_remove(self.idle_timer_id)
+        self.idle_timer_id = GLib.timeout_add_seconds(load_settings()["dim_minutes"] * 60, self.idle)
+
+    # --------------------------------------------------------------------------
+    def idle(self) -> bool:
+        """Idle timer expired: dim the D200."""
+        self.idle_timer_id = None
+        self.dim()
+        return False
+
+    # --------------------------------------------------------------------------
+    def send_brightness(self) -> None:
+        """Send the current layout again with the brightness of the current state.
+
+        Rewrites config.yaml instead of the app layout, so a layout sent with the
+        editor's test button stays. While priming, prime_done() sends the layout
+        with the right brightness anyway.
+        """
+        if self.priming:
+            return
+        write_layout(CONFIG_FILE, CHECK_FILE, self.brightness())
+        os.replace(CHECK_FILE, CONFIG_FILE)
+        subprocess.run(["systemctl", "--user", "--no-block", "restart", "ulanzi-daemon.service"])
+
+    # --------------------------------------------------------------------------
     def on_sleep(self, start: bool):
         """logind PrepareForSleep handler: prime again after resume.
 
@@ -174,7 +258,7 @@ class FocusService(dbus.service.Object):
     def send_wide_black(self) -> bool:
         """Push the helper layout, then schedule the real layout."""
         self.prime_timer_id = None
-        write_layout(WIDE_BLACK_FILE, CONFIG_FILE)
+        write_layout(WIDE_BLACK_FILE, CONFIG_FILE, self.brightness())
         subprocess.run(["systemctl", "--user", "restart", "ulanzi-daemon.service"])
         GLib.timeout_add(PRIME_DURATION_MS, self.prime_done)
         return False
@@ -203,7 +287,7 @@ class FocusService(dbus.service.Object):
             if not source.is_file():
                 print(f"missing layout file: {source}", file=sys.stderr, flush=True)
                 return False
-            write_layout(source, CHECK_FILE)
+            write_layout(source, CHECK_FILE, self.brightness())
             check = subprocess.run([str(VALIDATOR), "validate", str(CHECK_FILE)], capture_output=True, text=True)
             if check.returncode != 0:
                 CHECK_FILE.unlink()
@@ -264,6 +348,39 @@ def watch_kwin(bus: dbus.SessionBus) -> None:
 
 
 # --------------------------------------------------------------------------
+def watch_key_presses(service: FocusService) -> subprocess.Popen:
+    """Follow the journal of ulanzi-daemon and report every key press to the service.
+
+    The daemon has no other interface for key events, but it logs each of them,
+    also for keys without an action (wide display with the clock). journalctl
+    keeps following the unit across the daemon restarts of every layout switch.
+
+    Returns:
+        The journalctl process, to stop it when the service ends.
+    """
+    journal = subprocess.Popen(
+        ["journalctl", "--user", "--unit=ulanzi-daemon.service", "--follow", "--lines=0", "--output=cat"],
+        stdout=subprocess.PIPE)
+    rest = b""
+
+    # --------------------------------------------------------------------------
+    def on_output(fd: int, _condition) -> bool:
+        """Read new journal lines; a line may arrive in two chunks, so the last part is kept."""
+        nonlocal rest
+        data = os.read(fd, 4096)
+        if not data:
+            print("journalctl ended, no wake up on key press", file=sys.stderr, flush=True)
+            return False
+        *lines, rest = (rest + data).split(b"\n")
+        if any(KEY_PRESS.search(line) for line in lines):
+            service.key_pressed()
+        return True
+
+    GLib.io_add_watch(journal.stdout.fileno(), GLib.PRIORITY_DEFAULT, GLib.IO_IN | GLib.IO_HUP, on_output)
+    return journal
+
+
+# --------------------------------------------------------------------------
 def main() -> None:
     """Start the D-Bus service, load the KWin script and run until terminated."""
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
@@ -274,6 +391,7 @@ def main() -> None:
         service.on_sleep, signal_name="PrepareForSleep",
         dbus_interface="org.freedesktop.login1.Manager", bus_name="org.freedesktop.login1")
     watch_kwin(bus)
+    journal = watch_key_presses(service)
 
     loop = GLib.MainLoop()
     GLibUnix.signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, loop.quit)  # from systemd
@@ -281,6 +399,7 @@ def main() -> None:
     try:
         loop.run()
     finally:
+        journal.terminate()
         unload_kwin_script(bus)
 
 

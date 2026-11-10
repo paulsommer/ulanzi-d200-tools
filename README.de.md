@@ -23,7 +23,7 @@ klein und sollten sich leicht anpassen lassen.
 | `d200-raise.py` | Programm-Tasten: holt das zuletzt aktive Fenster eines Programms nach vorne (erneuter Druck wechselt reihum durch seine Fenster), startet es nur, wenn es nicht läuft |
 | `d200-layout-editor.sh`, `layout-editor/` | grafischer Layout-Editor (PySide6 in `layout-editor/.venv`): Tasten mit Icon, Text und Funktion, Drag & Drop, Test am Gerät |
 | `d200-icon.sh` | rendert ein SVG-Icon eines Programms (Datei oder aus einer JAR), ein eigenes PNG/JPG-Bild und/oder einen Text als 196×196-Tastenbild auf Schwarz, passend skaliert; braucht `librsvg2-bin` |
-| `d200-focus.py` | Dienst: wählt beim Fensterwechsel das Layout `~/.config/ulanzi/apps/<programm>.yaml`, prüft es, kopiert es auf `config.yaml` und startet den Daemon neu; lädt sein KWin-Script nach einem KWin-Neustart neu |
+| `d200-focus.py` | Dienst: wählt beim Fensterwechsel das Layout `~/.config/ulanzi/apps/<programm>.yaml`, prüft es, kopiert es auf `config.yaml` und startet den Daemon neu; lädt sein KWin-Script nach einem KWin-Neustart neu; dimmt die D200 nach einer Zeit ohne Tastendruck |
 | `systemd/d200-focus.service` | User-Unit für `d200-focus` (startet mit der Plasma-Sitzung) |
 | `systemd/d200-wide-black.service` | User-Unit, von udev beim Einstecken des D200 gestartet; lässt `d200-focus` den schwarzen Hintergrund neu schicken |
 | `udev/99-d200-focus.rules` | udev-Regel, startet beim Einstecken `d200-wide-black.service` und legt den Symlink `/dev/ulanzi-d200` an, solange der D200 angeschlossen ist |
@@ -227,6 +227,15 @@ Die Helligkeit gilt für alle Layouts und steht nicht in den Layout-Dateien. Der
 `~/.config/d200-focus/brightness.json` und wird sofort wirksam; die Tasten laden dabei kurz neu, weil der Daemon
 neu startet. `d200-focus` trägt den aktiven Wert bei jedem Layoutwechsel in `config.yaml` ein, eine Zeile `brightness:`
 in einem Layout wird dabei ersetzt.
+
+### Dimmen
+
+`[dim] [1 %] after [10] min.` im Layout-Editor: Nach so vielen Minuten ohne Tastendruck auf der D200 dimmt `d200-focus`
+die Tasten auf den Dimm-Wert; der nächste Tastendruck weckt sie wieder. Diese Taste führt ihre Funktion trotzdem aus –
+ohne Nebenwirkung weckt man die D200 mit dem großen Display (Uhr). Die Tastendrücke kommen aus dem Journal von
+`ulanzi-daemon`, der jede Taste protokolliert (eine andere Schnittstelle dafür hat der Daemon nicht); Aktivität am PC
+zählt nicht. Der Button **dim** dimmt zum Testen sofort (D-Bus-Methode `dim`). Eine geänderte Minutenzahl gilt ab dem
+nächsten Tastendruck.
 
 ### Uhr auf Schwarz
 

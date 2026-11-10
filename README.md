@@ -20,7 +20,7 @@ It is my personal setup (Kubuntu 26.04, Plasma 6, Wayland), shared as it is. The
 | `d200-raise.py` | program keys: brings the most recently active window of an application to the front (another press cycles through its windows), starts it only if it is not running |
 | `d200-layout-editor.sh`, `layout-editor/` | graphical layout editor (PySide6 in `layout-editor/.venv`): keys with icon, text and function, drag & drop, test on the device |
 | `d200-icon.sh` | renders an SVG icon of an application (from a file or from a JAR), an own PNG/JPG picture and/or a text as a 196×196 key image on black, scaled to fit; needs `librsvg2-bin` |
-| `d200-focus.py` | service: on every window switch it picks the layout `~/.config/ulanzi/apps/<application>.yaml`, validates it, copies it to `config.yaml` and restarts the daemon; reloads its KWin script when KWin restarts |
+| `d200-focus.py` | service: on every window switch it picks the layout `~/.config/ulanzi/apps/<application>.yaml`, validates it, copies it to `config.yaml` and restarts the daemon; reloads its KWin script when KWin restarts; dims the D200 after a time without a key press |
 | `systemd/d200-focus.service` | user unit for `d200-focus` (starts with the Plasma session) |
 | `systemd/d200-wide-black.service` | user unit started by udev when the D200 is plugged in; makes `d200-focus` send the black background again |
 | `udev/99-d200-focus.rules` | udev rule, starts `d200-wide-black.service` on plug-in and creates the symlink `/dev/ulanzi-d200` while the D200 is connected |
@@ -221,6 +221,15 @@ The brightness applies to all layouts and is not stored in the layout files. The
 `~/.config/d200-focus/brightness.json` and takes effect immediately; the keys reload briefly because the daemon
 restarts. `d200-focus` writes the active value to `config.yaml` on every layout switch and replaces any `brightness:`
 line in a layout.
+
+### Dimming
+
+`[dim] [1 %] after [10] min.` in the layout editor: after this many minutes without a key press on the D200,
+`d200-focus` dims the keys to the dim value; the next key press wakes them up again. That key still runs its action –
+use the wide display (clock) to wake the D200 without side effects. Key presses are taken from the journal of
+`ulanzi-daemon`, which logs every key (the daemon has no other interface for them); activity on the PC does not count.
+The **dim** button dims right away for testing (D-Bus method `dim`). A changed number of minutes is used from the next
+key press on.
 
 ### Clock on black
 

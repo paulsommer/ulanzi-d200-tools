@@ -27,8 +27,8 @@ from PySide6.QtGui import QColor, QIcon
 from PySide6.QtWidgets import QApplication, QColorDialog, QFileDialog, QMainWindow, QMenu, QMessageBox
 
 import layout_file as lf
-from config import (APPS_DIR, BRIGHTNESS_FILE, BUTTON_COUNT, CONFIG_FILE, D200_ICON, DEFAULT_BRIGHTNESS, ICONS_DIR,
-                    INPUT_EVENT_CODES, LAYOUT_ROOT, TEST_FILE, ULANZI_DIR, VALIDATOR, VERSION, WIDE_INDEX)
+from config import (APPS_DIR, BRIGHTNESS_FILE, BUTTON_COUNT, CONFIG_FILE, D200_ICON, DEFAULT_BRIGHTNESS,
+                    FOCUS_BUS_NAME, ICONS_DIR, INPUT_EVENT_CODES, LAYOUT_ROOT, TEST_FILE, ULANZI_DIR, VALIDATOR, VERSION, WIDE_INDEX)
 from key_widget import KeyWidget
 from new_layout_dialog import ask_layout_name
 
@@ -160,20 +160,35 @@ def with_previews(layout: lf.Layout) -> lf.Layout:
 
 # --------------------------------------------------------------------------
 def load_brightness() -> dict:
-    """Return the global brightness settings; defaults until they are changed the first time."""
-    return json.loads(BRIGHTNESS_FILE.read_text()) if BRIGHTNESS_FILE.is_file() else DEFAULT_BRIGHTNESS
+    """Return the global brightness settings; defaults until they are changed the first time.
+
+    Keys missing in an older file (dim settings) are taken from the defaults.
+    """
+    if not BRIGHTNESS_FILE.is_file():
+        return DEFAULT_BRIGHTNESS
+    return {**DEFAULT_BRIGHTNESS, **json.loads(BRIGHTNESS_FILE.read_text())}
 
 
 # --------------------------------------------------------------------------
 def send_config(text: str) -> None:
     """Replace config.yaml and restart the daemon, which only reads the file at start.
 
-    Same steps as FocusService.apply() in d200-focus. Used by the test button and
-    when the brightness changes.
+    Same steps as FocusService.apply() in d200-focus. Used by the test button.
     """
     TEST_FILE.write_text(text)
     os.replace(TEST_FILE, CONFIG_FILE)
     subprocess.run(["systemctl", "--user", "--no-block", "restart", "ulanzi-daemon.service"])
+
+
+# --------------------------------------------------------------------------
+def call_focus(method: str) -> str:
+    """Call a D-Bus method of d200-focus ("dim", "wake") and return an error text or "".
+
+    d200-focus keeps the dimmed state, so it alone sets the brightness in config.yaml.
+    """
+    result = subprocess.run(["busctl", "--user", "call", FOCUS_BUS_NAME, "/", FOCUS_BUS_NAME, method],
+                            capture_output=True, text=True)
+    return result.stderr.strip() if result.returncode else ""
 
 
 # --------------------------------------------------------------------------
@@ -243,6 +258,8 @@ class MainWindow(QObject):
         ui.dayBrightnessSpin.setValue(settings["day"])
         ui.nightBrightnessSpin.setValue(settings["night"])
         ui.nightModeButton.setChecked(settings["night_mode"])
+        ui.dimBrightnessSpin.setValue(settings["dim"])
+        ui.dimMinutesSpin.setValue(settings["dim_minutes"])
         self.show_mode(settings["night_mode"])
         self.sent_brightness = self.active_brightness()
         self.brightness_timer = QTimer(singleShot=True, interval=BRIGHTNESS_DELAY_MS)
@@ -251,6 +268,9 @@ class MainWindow(QObject):
         ui.nightModeButton.toggled.connect(self.brightness_changed)
         ui.dayBrightnessSpin.valueChanged.connect(self.brightness_changed)
         ui.nightBrightnessSpin.valueChanged.connect(self.brightness_changed)
+        ui.dimBrightnessSpin.valueChanged.connect(self.brightness_changed)
+        ui.dimMinutesSpin.valueChanged.connect(self.brightness_changed)
+        ui.dimButton.clicked.connect(self.dim)
 
         self.fill_layout_combo(DEFAULT_LAYOUT)
 
@@ -275,22 +295,40 @@ class MainWindow(QObject):
         BRIGHTNESS_FILE.parent.mkdir(parents=True, exist_ok=True)
         BRIGHTNESS_FILE.write_text(json.dumps({"day": ui.dayBrightnessSpin.value(),
                                                "night": ui.nightBrightnessSpin.value(),
-                                               "night_mode": ui.nightModeButton.isChecked()}, indent=2) + "\n")
+                                               "night_mode": ui.nightModeButton.isChecked(),
+                                               "dim": ui.dimBrightnessSpin.value(),
+                                               "dim_minutes": ui.dimMinutesSpin.value()}, indent=2) + "\n")
         self.brightness_timer.start()
 
     # --------------------------------------------------------------------------
     def send_brightness(self) -> None:
         """Apply the active brightness to the layout shown on the D200.
 
-        Changes config.yaml instead of asking d200-focus to switch again, so a
-        layout sent with the test button stays. Changing the inactive value does
-        not restart the daemon.
+        Asks d200-focus ("wake") instead of changing config.yaml here: it ends a
+        dimmed state and restarts its idle timer, and it keeps a layout sent with
+        the test button. Changing the inactive value does not restart the daemon.
         """
         level = self.active_brightness()
         if level != self.sent_brightness:
-            send_config(lf.with_brightness(CONFIG_FILE.read_text(), level))
+            error = call_focus("wake")
+            if error:
+                self.status(f"d200-focus not reachable: {error}")
+                return
             self.sent_brightness = level
             self.status(f"Brightness {level} % sent to the D200")
+
+    # --------------------------------------------------------------------------
+    def dim(self) -> None:
+        """Test button: ask d200-focus to dim the D200 now, as the idle timer would.
+
+        d200-focus holds the dimmed state and wakes the D200 on the next key press,
+        so the editor does not send the brightness itself.
+        """
+        error = call_focus("dim")
+        if error:
+            self.status(f"d200-focus not reachable: {error}")
+        else:
+            self.status("D200 dimmed, a key press wakes it up")
 
     # --------------------------------------------------------------------------
     def eventFilter(self, obj, event) -> bool:
